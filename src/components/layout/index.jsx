@@ -14,6 +14,7 @@ const MainLayout = ({ children }) => {
           </Header>
           <div className='flex-1'>
             <ul className='*:py-3! *:px-1!'>
+              <li><a className='text-white! block text-base!' href="/">⭐ Trang tổng</a></li>
               <li><a className='text-white! block text-base!' href="#">⭐ Giới thiệu</a></li>
               <li><a className='text-white! block text-base!' href="#">📑 Hướng dẫn sử dụng</a></li>
               <li><a className='text-white! block text-base!' href="#">❓ Hướng dẫn cấu hình</a></li>
