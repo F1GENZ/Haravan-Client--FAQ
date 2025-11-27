@@ -6,18 +6,29 @@ const { Header, Footer, Content, Sider } = Layout;
 
 const MainLayout = ({ children }) => {
   const orgid = sessionStorage.getItem("orgid");
+  const hasOrgid = orgid && orgid !== 'null' && orgid !== 'undefined' && orgid.trim() !== '';
   const { data: trialInfo, isLoading: trialLoading } = trialService.useGetTrialInfo(orgid);
 
   const renderTrialInfo = () => {
+    // Don't show trial info if no orgid
+    if (!hasOrgid) {
+      return null;
+    }
+
     if (trialLoading) {
       return <p>Đang tải...</p>;
     }
 
     if (!trialInfo) {
-      return <p>Bạn còn <strong className='text-red-500 text-!'>0 ngày</strong> dùng thử</p>;
+      return null;
     }
 
     const { days_remaining, is_unlimited, status } = trialInfo;
+
+    // Don't show if not authenticated or error
+    if (status === 'not_authenticated' || status === 'error' || status === 'not_found') {
+      return null;
+    }
 
     if (is_unlimited || status === 'active') {
       return <p><strong className='text-green-500 text-!'>✓ Đã kích hoạt vĩnh viễn</strong></p>;

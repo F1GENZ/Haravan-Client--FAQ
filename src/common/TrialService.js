@@ -9,6 +9,19 @@ export default class TrialService extends BaseService {
     return useQuery({
       queryKey: ["trial", orgid],
       queryFn: async () => {
+        // Return default if no orgid
+        if (!orgid || orgid === 'null' || orgid === 'undefined' || orgid.trim() === '') {
+          return {
+            success: false,
+            data: {
+              status: 'not_authenticated',
+              expires_at: null,
+              days_remaining: 0,
+              is_unlimited: false,
+            },
+          };
+        }
+
         try {
           const cache = queryClient.getQueryData(["trial", orgid]);
           if (cache) return cache;
@@ -17,30 +30,31 @@ export default class TrialService extends BaseService {
           return this.toResult(response);
         } catch (error) {
           const handleError = this.toResultError(error);
-          // Don't show error message for trial info, just return default
+          // Don't show error message for trial info, just return default silently
           return {
             success: false,
             data: {
-              status: 'trial',
+              status: 'error',
               expires_at: null,
               days_remaining: 0,
               is_unlimited: false,
             },
-            errorMessage: handleError?.errorMessage,
           };
         }
       },
       select: (response) => {
-        if (response.data) return response.data;
+        if (response?.data) return response.data;
         return {
-          status: 'trial',
+          status: 'not_authenticated',
           expires_at: null,
           days_remaining: 0,
           is_unlimited: false,
         };
       },
+      enabled: !!orgid && orgid !== 'null' && orgid !== 'undefined', // Only run query if orgid exists
       staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: false, // Don't refetch on focus to avoid errors
+      retry: false, // Don't retry to avoid multiple error messages
     });
   };
 

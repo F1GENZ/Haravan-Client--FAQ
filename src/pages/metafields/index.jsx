@@ -6,6 +6,8 @@ import { SettingOutlined } from '@ant-design/icons';
 import { metafieldsService } from '../../common/MetafieldsServices';
 import ModalMetafields from './modal';
 
+const { Title, Paragraph, Text } = Typography;
+
 
 const Metafields = () => {
   const location = useLocation();
@@ -17,10 +19,30 @@ const Metafields = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [dataForModal, setDataForModal] = useState(null);
 
-  const { isLoading: field_loading, data: field_data } = metafieldsService.useGetMetafields({ type, namespace: 'store.faqs.data', objectid });
+  const orgid = sessionStorage.getItem("orgid");
+  const hasOrgid = orgid && orgid !== 'null' && orgid !== 'undefined' && orgid.trim() !== '';
+  
+  const { isLoading: field_loading, data: field_data, error } = metafieldsService.useGetMetafields({ type, namespace: 'store.faqs.data', objectid });
   const deleteMetafieldMutation = metafieldsService.useDeleteField();
 
   if (field_loading || isLoading) return <Spin fullscreen />;
+
+  // Show message if no orgid instead of error
+  if (!hasOrgid) {
+    return (
+      <div className='p-6 text-center'>
+        <Title level={3} className='text-gray-500'>
+          Vui lòng đăng nhập để sử dụng tính năng này
+        </Title>
+        <Paragraph>
+          Bạn cần đăng nhập với tài khoản Haravan để quản lý FAQ.
+        </Paragraph>
+      </div>
+    );
+  }
+
+  // Show empty state if no data and no error (or if error is handled)
+  const displayData = field_data || [];
   return (
     <div className='space-y-2!'>
       <div className='sticky top-0 h-min-content bg-white p-4 shadow-md z-10'>
@@ -36,9 +58,16 @@ const Metafields = () => {
         <ModalMetafields isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} isLoading={isLoading} setIsLoading={setIsLoading} fields={dataForModal} />
       </div>
       <div className='p-4'>
+        {displayData.length === 0 && !field_loading && (
+          <div className='text-center py-8'>
+            <Text className='text-gray-500'>
+              Chưa có câu hỏi nào. Hãy thêm câu hỏi mới để bắt đầu!
+            </Text>
+          </div>
+        )}
         <List
           itemLayout="horizontal"
-          dataSource={field_data}
+          dataSource={displayData}
           renderItem={(item, index) => {
             const value = item.value ? JSON.parse(item.value) : {};
             const metafieldid = item.id;
