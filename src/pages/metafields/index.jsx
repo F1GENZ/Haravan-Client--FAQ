@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams } from "react-router";
 import { useLocation } from "react-router-dom";
-import { Popconfirm, Button, Tag, List, Flex, Spin, Typography } from 'antd';
+import { Popconfirm, Button, Tag, List, Flex, Spin, Typography, Collapse } from 'antd';
 import { SettingOutlined } from '@ant-design/icons';
 import { metafieldsService } from '../../common/MetafieldsServices';
 import ModalMetafields from './modal';
@@ -25,6 +25,45 @@ const Metafields = () => {
   const { isLoading: field_loading, data: field_data, error } = metafieldsService.useGetMetafields({ type, namespace: 'store.faqs.data', objectid });
   const deleteMetafieldMutation = metafieldsService.useDeleteField();
 
+  // Group FAQs by category - MUST be called before any early returns (Rules of Hooks)
+  const groupedFAQs = useMemo(() => {
+    if (!field_data || field_data.length === 0) return {};
+    
+    const grouped = {};
+    
+    field_data.forEach((item) => {
+      try {
+        const value = item.value ? JSON.parse(item.value) : {};
+        const category = value.categories?.trim() || 'Không phân loại';
+        
+        if (!grouped[category]) {
+          grouped[category] = [];
+        }
+        grouped[category].push({ ...item, parsedValue: value });
+      } catch (e) {
+        console.error('Error parsing FAQ:', e);
+        const category = 'Không phân loại';
+        if (!grouped[category]) {
+          grouped[category] = [];
+        }
+        grouped[category].push({ ...item, parsedValue: {} });
+      }
+    });
+    
+    // Sort categories alphabetically
+    const sortedCategories = Object.keys(grouped).sort();
+    const sortedGrouped = {};
+    sortedCategories.forEach(cat => {
+      sortedGrouped[cat] = grouped[cat];
+    });
+    
+    return sortedGrouped;
+  }, [field_data]);
+
+  const categories = Object.keys(groupedFAQs);
+  const displayData = field_data || [];
+
+  // Early returns AFTER all hooks
   if (field_loading || isLoading) return <Spin fullscreen />;
 
   // Show message if no orgid instead of error
@@ -41,8 +80,6 @@ const Metafields = () => {
     );
   }
 
-  // Show empty state if no data and no error (or if error is handled)
-  const displayData = field_data || [];
   return (
     <div className='space-y-2!'>
       <div className='sticky top-0 h-min-content bg-white p-4 shadow-md z-10'>
@@ -65,38 +102,65 @@ const Metafields = () => {
             </Text>
           </div>
         )}
-        <List
-          itemLayout="horizontal"
-          dataSource={displayData}
-          renderItem={(item, index) => {
-            const value = item.value ? JSON.parse(item.value) : {};
-            const metafieldid = item.id;
-            return (
-              <List.Item className='bg-gray-50 border border-gray-200 shadow mb-4! px-4! py-2! rounded'
-                actions={[
-                  value?.schema ? <Tag color="green">Schema Markup</Tag> : null,
-                  <Button type="text" icon={<SettingOutlined />} size="medium"
-                    onClick={() => {
-                      setDataForModal({ ...value, objectid, metafieldid, type, field_data });
-                      setIsModalOpen(true); // Open modal when settings button is clicked
-                    }}
-                  >Chỉnh sửa</Button>,
-                  <Popconfirm
-                    title="Xóa câu hỏi"
-                    description="Bạn có chắc muốn xóa câu hỏi này không?"
-                    onConfirm={async () => await deleteMetafieldMutation.mutateAsync({ ...value, objectid, metafieldid, type })}
-                    okText="Có"
-                    cancelText="Không"
-                  >
-                    <Button danger>Xóa</Button>
-                  </Popconfirm>
-                ]}
-              >
-                <Typography.Title className='mb-0!' level={5}>{value.question}</Typography.Title>
-              </List.Item>
-            );
-          }}
-        />
+        
+        {categories.length > 0 && (
+          <Collapse 
+            defaultActiveKey={categories.length > 0 ? categories : undefined}
+            ghost
+            size="large"
+            items={categories.map((category) => ({
+              key: category,
+              label: (
+                <Flex justify='space-between' align='center'>
+                  <span style={{ fontSize: '16px', fontWeight: 600 }}>
+                    📁 {category}
+                  </span>
+                  <Tag color="blue">{groupedFAQs[category].length} câu hỏi</Tag>
+                </Flex>
+              ),
+              children: (
+                <List
+                  itemLayout="horizontal"
+                  dataSource={groupedFAQs[category]}
+                  renderItem={(item) => {
+                    const value = item.parsedValue || {};
+                    const metafieldid = item.id;
+                    return (
+                      <List.Item 
+                        className='bg-gray-50 border border-gray-200 shadow mb-4! px-4! py-2! rounded'
+                        actions={[
+                          value?.schema ? <Tag color="green">Schema Markup</Tag> : null,
+                          <Button 
+                            type="text" 
+                            icon={<SettingOutlined />} 
+                            size="medium"
+                            onClick={() => {
+                              setDataForModal({ ...value, objectid, metafieldid, type, field_data });
+                              setIsModalOpen(true);
+                            }}
+                          >
+                            Chỉnh sửa
+                          </Button>,
+                          <Popconfirm
+                            title="Xóa câu hỏi"
+                            description="Bạn có chắc muốn xóa câu hỏi này không?"
+                            onConfirm={async () => await deleteMetafieldMutation.mutateAsync({ ...value, objectid, metafieldid, type })}
+                            okText="Có"
+                            cancelText="Không"
+                          >
+                            <Button danger>Xóa</Button>
+                          </Popconfirm>
+                        ]}
+                      >
+                        <Typography.Title className='mb-0!' level={5}>{value.question}</Typography.Title>
+                      </List.Item>
+                    );
+                  }}
+                />
+              ),
+            }))}
+          />
+        )}
       </div>
     </div>
   );

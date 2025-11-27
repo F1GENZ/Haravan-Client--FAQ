@@ -25,7 +25,7 @@ export const routes = [
   },
   {
     path: "*",
-    layout: false,
+    layout: true,
     isPrivate: false,
     page: <Metafields />,
   },
