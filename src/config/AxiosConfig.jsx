@@ -12,7 +12,10 @@ const httpClient = axios.create({
 httpClient.interceptors.request.use(
   (config) => {
     const orgid = sessionStorage.getItem("orgid");
-    if (orgid) config.params = { ...config.params, orgid: orgid };
+    if (orgid) {
+      config.params = { ...config.params, orgid: orgid };
+      config.headers = { ...config.headers, orgid: orgid };
+    }
     return config;
   },
   (err) => {

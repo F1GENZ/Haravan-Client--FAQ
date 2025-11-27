@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Form, Button, Input, Switch, Typography, Divider, Spin } from 'antd';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Modal, Form, Button, Input, Switch, Typography, Divider, Spin, AutoComplete } from 'antd';
 import { metafieldsService } from '../../common/MetafieldsServices';
 import TinyEditor from '../../components/editor';
 
@@ -7,6 +7,25 @@ const ModalMetafields = ({ isModalOpen, setIsModalOpen, isLoading, setIsLoading,
   const [form] = Form.useForm();
   const [isDirty, setIsDirty] = useState(false);
   const [editorContent, setEditorContent] = useState("");
+
+  // Extract unique categories from field_data
+  const categorySuggestions = useMemo(() => {
+    if (!fields?.field_data || !Array.isArray(fields.field_data)) return [];
+    
+    const categoriesSet = new Set();
+    fields.field_data.forEach((item) => {
+      try {
+        const value = item.value ? JSON.parse(item.value) : {};
+        if (value.categories && value.categories.trim()) {
+          categoriesSet.add(value.categories.trim());
+        }
+      } catch (e) {
+        console.error('Error parsing metafield value:', e);
+      }
+    });
+    
+    return Array.from(categoriesSet).sort();
+  }, [fields?.field_data]);
 
   useEffect(() => {
     let content = fields?.answer || "";
@@ -82,12 +101,29 @@ const ModalMetafields = ({ isModalOpen, setIsModalOpen, isLoading, setIsLoading,
         ]}>
           <Input placeholder='Nhập câu hỏi...' required />
         </Form.Item>
-        <Form.Item label="🔑 Phân loại câu hỏi" name="categories" rules={[
-          { required: true, message: "Vui lòng nhập phân loại câu hỏi!" },
-          { min: 5, message: "Phân loại không được ngắn hơn 5 ký tự!" },
-          { max: 100, message: "Phân loại không được vượt quá 100 ký tự!" }
-        ]}>
-          <Input placeholder='Nhập phân loại câu hỏi...' />
+        <Form.Item 
+          label="🔑 Phân loại câu hỏi" 
+          name="categories" 
+          rules={[
+            { required: true, message: "Vui lòng nhập phân loại câu hỏi!" },
+            { min: 5, message: "Phân loại không được ngắn hơn 5 ký tự!" },
+            { max: 100, message: "Phân loại không được vượt quá 100 ký tự!" }
+          ]}
+          extra={categorySuggestions.length > 0 ? `Gợi ý: ${categorySuggestions.length} phân loại đã có sẵn` : null}
+        >
+          <AutoComplete
+            placeholder={categorySuggestions.length > 0 
+              ? 'Nhập phân loại hoặc chọn từ danh sách gợi ý...' 
+              : 'Nhập phân loại câu hỏi...'}
+            options={categorySuggestions.map(cat => ({ value: cat, label: cat }))}
+            filterOption={(inputValue, option) =>
+              option.value.toLowerCase().includes(inputValue.toLowerCase())
+            }
+            allowClear
+            showSearch
+            style={{ width: '100%' }}
+            notFoundContent={categorySuggestions.length === 0 ? 'Chưa có phân loại nào' : 'Không tìm thấy'}
+          />
         </Form.Item>
         <Form.Item label="✅ Câu trả lời" name="answer">
           <TinyEditor initialValue={editorContent}

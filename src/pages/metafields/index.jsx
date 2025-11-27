@@ -48,7 +48,7 @@ const Metafields = () => {
                   value?.schema ? <Tag color="green">Schema Markup</Tag> : null,
                   <Button type="text" icon={<SettingOutlined />} size="medium"
                     onClick={() => {
-                      setDataForModal({ ...value, objectid, metafieldid, type });
+                      setDataForModal({ ...value, objectid, metafieldid, type, field_data });
                       setIsModalOpen(true); // Open modal when settings button is clicked
                     }}
                   >Chỉnh sửa</Button>,

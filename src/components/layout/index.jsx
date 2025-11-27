@@ -1,7 +1,35 @@
 import { Layout, Flex, Menu } from 'antd';
+import { Link } from 'react-router-dom';
+import { trialService } from '../../common/TrialService';
+
 const { Header, Footer, Content, Sider } = Layout;
 
 const MainLayout = ({ children }) => {
+  const orgid = sessionStorage.getItem("orgid");
+  const { data: trialInfo, isLoading: trialLoading } = trialService.useGetTrialInfo(orgid);
+
+  const renderTrialInfo = () => {
+    if (trialLoading) {
+      return <p>Đang tải...</p>;
+    }
+
+    if (!trialInfo) {
+      return <p>Bạn còn <strong className='text-red-500 text-!'>0 ngày</strong> dùng thử</p>;
+    }
+
+    const { days_remaining, is_unlimited, status } = trialInfo;
+
+    if (is_unlimited || status === 'active') {
+      return <p><strong className='text-green-500 text-!'>✓ Đã kích hoạt vĩnh viễn</strong></p>;
+    }
+
+    if (days_remaining <= 0) {
+      return <p><strong className='text-red-500 text-!'>⚠️ Đã hết hạn dùng thử</strong></p>;
+    }
+
+    return <p>Bạn còn <strong className='text-red-500 text-!'>{days_remaining} ngày</strong> dùng thử</p>;
+  };
+
   return (
     <Layout className='h-screen w-screen'>
       <Sider width="210">
@@ -14,13 +42,13 @@ const MainLayout = ({ children }) => {
           </Header>
           <div className='flex-1'>
             <ul className='*:py-3! *:px-1!'>
-              <li><a className='text-white! block text-base!' href="/">🏠 Trang tổng</a></li>
-              <li><a className='text-white! block text-base!' href="#">⭐ Giới thiệu</a></li>
-              <li><a className='text-white! block text-base!' href="#">📑 Hướng dẫn sử dụng</a></li>
+              <li><Link className='text-white! block text-base!' to="/">🏠 Trang tổng</Link></li>
+              <li><Link className='text-white! block text-base!' to="/introduction">⭐ Giới thiệu</Link></li>
+              <li><Link className='text-white! block text-base!' to="/guide">📑 Hướng dẫn sử dụng</Link></li>
             </ul>
           </div>
           <Footer className='bg-transparent! h-fit! p-2! *:text-white text-xs! space-y-1'>
-            <p>Bạn còn <strong className='text-red-500 text-!'>15 ngày</strong> dùng thử</p>
+            {renderTrialInfo()}
             <p>©{new Date().getFullYear()} F1GENZ. All rights reserved.</p>
           </Footer>
         </Flex>
