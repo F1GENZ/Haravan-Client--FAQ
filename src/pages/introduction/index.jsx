@@ -59,10 +59,24 @@ const Introduction = () => {
               </Paragraph>
             </div>
             <div>
+              <Title level={4} className='mb-2!'>🔍 Tìm kiếm sản phẩm thông minh</Title>
+              <Paragraph>
+                Thanh tìm kiếm thông minh giúp bạn nhanh chóng tìm và quản lý FAQ cho từng sản phẩm cụ thể. 
+                Chỉ cần nhập tên sản phẩm, hệ thống sẽ tự động gợi ý và điều hướng đến trang quản lý FAQ của sản phẩm đó.
+              </Paragraph>
+            </div>
+            <div>
+              <Title level={4} className='mb-2!'>📁 Phân loại câu hỏi theo chủ đề</Title>
+              <Paragraph>
+                Tổ chức các câu hỏi theo từng phân loại (category) để dễ dàng quản lý và tìm kiếm. 
+                Hệ thống tự động gợi ý các phân loại đã có sẵn để tránh nhập trùng lặp.
+              </Paragraph>
+            </div>
+            <div>
               <Title level={4} className='mb-2!'>🔗 Tích hợp Haravan</Title>
               <Paragraph>
                 Kết nối trực tiếp với cửa hàng Haravan của bạn, đồng bộ dữ liệu tự động và 
-                quản lý FAQ ngay trên nền tảng quen thuộc.
+                quản lý FAQ cho từng sản phẩm, collection hoặc shop một cách dễ dàng.
               </Paragraph>
             </div>
             <div>
@@ -95,6 +109,12 @@ const Introduction = () => {
             </Paragraph>
             <Paragraph className='mb-2!'>
               ✅ <strong>Dễ dàng cập nhật:</strong> Chỉnh sửa và cập nhật nội dung FAQ bất cứ lúc nào
+            </Paragraph>
+            <Paragraph className='mb-2!'>
+              ✅ <strong>Tổ chức theo sản phẩm:</strong> Quản lý FAQ riêng biệt cho từng sản phẩm, giúp khách hàng tìm thông tin chính xác hơn
+            </Paragraph>
+            <Paragraph className='mb-2!'>
+              ✅ <strong>Tìm kiếm nhanh chóng:</strong> Tìm kiếm sản phẩm và điều hướng đến trang FAQ chỉ trong vài giây
             </Paragraph>
           </Space>
         </Card>

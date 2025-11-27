@@ -60,6 +60,11 @@ const Guide = () => {
                   status: 'finish',
                 },
                 {
+                  title: 'Chọn phân loại câu hỏi',
+                  description: 'Nhập phân loại (category) cho câu hỏi. Hệ thống sẽ gợi ý các phân loại đã có sẵn để bạn chọn, hoặc bạn có thể nhập phân loại mới',
+                  status: 'finish',
+                },
+                {
                   title: 'Soạn thảo câu trả lời',
                   description: 'Sử dụng trình soạn thảo để viết câu trả lời chi tiết. Bạn có thể định dạng văn bản, thêm hình ảnh, liên kết, danh sách, v.v.',
                   status: 'finish',
@@ -127,6 +132,30 @@ const Guide = () => {
         </Card>
 
         <Card className='shadow-md'>
+          <Title level={2} className='text-indigo-600! mb-4!'>
+            🔍 Tìm kiếm và quản lý FAQ theo sản phẩm
+          </Title>
+          <Space direction="vertical" size="middle" className='w-full'>
+            <Paragraph className='text-base leading-relaxed'>
+              Bạn có thể quản lý FAQ cho từng sản phẩm cụ thể:
+            </Paragraph>
+            <ol className='list-decimal list-inside space-y-2 ml-4'>
+              <li>Sử dụng thanh tìm kiếm ở đầu trang để tìm sản phẩm</li>
+              <li>Nhập tên sản phẩm, hệ thống sẽ tự động gợi ý các sản phẩm phù hợp</li>
+              <li>Chọn sản phẩm từ danh sách gợi ý hoặc nhấn Enter để tìm kiếm</li>
+              <li>Bạn sẽ được chuyển đến trang quản lý FAQ của sản phẩm đó</li>
+              <li>Tại đây bạn có thể thêm, sửa, xóa FAQ riêng cho sản phẩm đó</li>
+            </ol>
+            <Alert
+              message="Lưu ý"
+              description="FAQ được quản lý riêng biệt cho từng sản phẩm, collection hoặc shop. Mỗi sản phẩm có thể có bộ FAQ riêng của mình."
+              type="info"
+              showIcon
+            />
+          </Space>
+        </Card>
+
+        <Card className='shadow-md'>
           <Title level={2} className='text-purple-600! mb-4!'>
             <CheckCircleOutlined className='mr-2' />
             Mẹo và thực hành tốt nhất
@@ -159,7 +188,14 @@ const Guide = () => {
             <Title level={4} className='mb-2!'>📊 Phân loại câu hỏi</Title>
             <Paragraph>
               Tổ chức các câu hỏi theo chủ đề hoặc mức độ quan trọng để khách hàng dễ dàng tìm 
-              thấy thông tin họ cần.
+              thấy thông tin họ cần. Hệ thống sẽ tự động nhóm các câu hỏi theo phân loại và hiển thị 
+              trong các panel có thể mở rộng. Sử dụng các phân loại nhất quán để dễ quản lý.
+            </Paragraph>
+
+            <Title level={4} className='mb-2!'>🔍 Sử dụng tìm kiếm sản phẩm</Title>
+            <Paragraph>
+              Thanh tìm kiếm ở đầu trang giúp bạn nhanh chóng điều hướng đến trang quản lý FAQ của 
+              bất kỳ sản phẩm nào. Chỉ cần nhập ít nhất 2 ký tự, hệ thống sẽ tự động gợi ý các sản phẩm phù hợp.
             </Paragraph>
           </Space>
         </Card>
