@@ -149,7 +149,7 @@ describe('buildFaqPayload', () => {
     expect('metafieldid' in payload).toBe(false);
   });
 
-  it('keeps metafieldid on update and falls back to position 1', () => {
+  it('keeps metafieldid on update and omits an absent position', () => {
     const payload = buildFaqPayload({
       type: 'shop',
       objectid: '0',
@@ -163,8 +163,24 @@ describe('buildFaqPayload', () => {
     });
 
     expect(payload.metafieldid).toBe(99);
-    expect(payload.position).toBe(1);
+    expect('position' in payload).toBe(false);
     expect(payload.schema).toBe(false);
+  });
+
+  it('keeps the supplied position on update', () => {
+    const payload = buildFaqPayload({
+      type: 'products',
+      objectid: '42',
+      metafieldid: 7,
+      key: 'faq_abc',
+      question: 'Hỏi',
+      answer: '',
+      categories: '',
+      schema: true,
+      position: 3,
+    });
+
+    expect(payload.position).toBe(3);
   });
 });
 

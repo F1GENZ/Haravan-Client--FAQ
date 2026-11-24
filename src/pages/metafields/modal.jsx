@@ -52,7 +52,7 @@ const ModalMetafields = ({
       answer: values.answer ?? '',
       categories: values.categories,
       schema: values.schema,
-      position: isEditing ? editing.position ?? nextPosition : nextPosition,
+      position: isEditing ? editing.position : nextPosition,
     });
 
     try {

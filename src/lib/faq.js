@@ -105,9 +105,11 @@ export function buildFaqPayload({
     answer: String(answer ?? ""),
     categories: String(categories ?? "").trim(),
     schema: Boolean(schema),
-    position: normalizePosition(position) ?? 1,
   };
   if (metafieldid) payload.metafieldid = metafieldid;
+  // A legacy item without a position must not invent one on update: the worker keeps the stored value.
+  const normalizedPosition = normalizePosition(position);
+  if (normalizedPosition !== null) payload.position = normalizedPosition;
   return payload;
 }
 
