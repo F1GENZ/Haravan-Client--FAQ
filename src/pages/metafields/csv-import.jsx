@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Button, Flex, Modal, Progress, Typography, Upload, message } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
@@ -27,6 +27,10 @@ const CsvImportModal = ({ open, onClose, type, objectid, entries, canWrite }) =>
     setFailures([]);
     setFinished(false);
   };
+
+  useEffect(() => {
+    if (!open && !running) resetState();
+  }, [open, running]);
 
   const handleClose = () => {
     if (running) return;
