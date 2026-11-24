@@ -1,22 +1,7 @@
 import httpClient from "../config/AxiosConfig";
+import { toResult } from "./apiResult";
 
-class AuthService {
-  async login(orgid){
-    try {
-      return await httpClient.get(`/api/oauth/install/login`);
-    } catch (error) {
-      console.error("Error logging in:", error);
-      throw error;
-    }
-  } 
-
-  async install(code){ 
-    try {
-      const response = await httpClient.post("/api/oauth/install/grandservice", { code });
-      return this.toResult(response);
-    } catch (error) {
-      return this.toResultError(error);
-    }
-  }
-} 
-export const authService = new AuthService();
+export async function requestLoginUrl() {
+  const response = await httpClient.get("/api/oauth/install/login");
+  return toResult(response);
+}
