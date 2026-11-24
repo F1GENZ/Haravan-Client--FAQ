@@ -50,7 +50,11 @@ function useFaqMutation(mutationFn, successMessage) {
       if (successMessage) message.success(successMessage);
     },
     onError: (error) => {
-      message.error(toResultError(error).errorMessage || FALLBACK_ERROR);
+      const result = toResultError(error);
+      if (result.status === 402) {
+        queryClient.invalidateQueries({ queryKey: ["trial"] });
+      }
+      message.error(result.errorMessage || FALLBACK_ERROR);
     },
   });
 }

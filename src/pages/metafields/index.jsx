@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import {
   Button,
@@ -67,6 +67,15 @@ const Metafields = () => {
   const [editing, setEditing] = useState(null);
   const [orderEntries, setOrderEntries] = useState(null);
   const [isCsvOpen, setIsCsvOpen] = useState(false);
+
+  const targetKey = `${resourceType}:${objectid}`;
+
+  useEffect(() => {
+    setOrderEntries(null);
+    setEditing(null);
+    setIsModalOpen(false);
+    setIsCsvOpen(false);
+  }, [targetKey]);
 
   const groups = useMemo(() => groupFaqs(entries), [entries]);
   const nextPosition = useMemo(() => nextFaqPosition(entries), [entries]);

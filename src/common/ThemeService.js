@@ -37,9 +37,11 @@ export function useInstallSnippet() {
       message.success("Đã cài snippet vào theme đang xuất bản.");
     },
     onError: (error) => {
-      message.error(
-        toResultError(error).errorMessage || "Không cài được snippet vào theme."
-      );
+      const result = toResultError(error);
+      if (result.status === 402) {
+        queryClient.invalidateQueries({ queryKey: ["trial"] });
+      }
+      message.error(result.errorMessage || "Không cài được snippet vào theme.");
     },
   });
 }
