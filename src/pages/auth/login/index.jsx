@@ -16,7 +16,9 @@ const Login = () => {
 
     requestLoginUrl()
       .then((response) => {
-        if (response.status === 200 && response.data) window.location.replace(response.data);
+        if (response.status === 200 && typeof response.data === 'string' && response.data.trim()) {
+          window.location.replace(response.data.trim());
+        }
       })
       .catch((error) => {
         console.error('Error requesting the Haravan login URL:', error);

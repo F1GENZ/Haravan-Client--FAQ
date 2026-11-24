@@ -13,13 +13,17 @@ const STATUS_MESSAGES = {
 };
 
 export function toResult(response) {
-  const body = response?.data ?? {};
+  const body = response?.data;
+  // Some endpoints answer with a raw string (the Haravan authorize URL) instead of the envelope.
+  const isEnvelope =
+    body !== null && typeof body === "object" && !Array.isArray(body) && "data" in body;
+
   return {
     success: response.status >= 200 && response.status < 300,
     status: response.status,
-    data: body.data ?? null,
-    errorCode: body.errorCode ?? null,
-    errorMessage: body.errorMessage ?? null,
+    data: isEnvelope ? body.data : body ?? null,
+    errorCode: isEnvelope ? body.errorCode ?? null : null,
+    errorMessage: isEnvelope ? body.errorMessage ?? null : null,
   };
 }
 
