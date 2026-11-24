@@ -85,6 +85,9 @@ const CsvImportModal = ({ open, onClose, type, objectid, entries, canWrite }) =>
           line: row.line,
           message: result.errorMessage || 'Không tạo được câu hỏi.',
         });
+        if (result.status === 402) {
+          queryClient.invalidateQueries({ queryKey: ['trial'] });
+        }
         processed += 1;
         setProgress({ processed, total: validRows.length });
         if (result.status === 402) break;
@@ -171,6 +174,17 @@ const CsvImportModal = ({ open, onClose, type, objectid, entries, canWrite }) =>
             type={invalidRows.length > 0 ? 'warning' : 'success'}
             showIcon
             message={`${validRows.length} dòng hợp lệ, ${invalidRows.length} dòng lỗi.`}
+            description={
+              invalidRows.length > 0 ? (
+                <ul className='list-disc list-inside space-y-1 mb-0'>
+                  {invalidRows.map((row) => (
+                    <li key={`invalid-${row.line}`}>
+                      Dòng {row.line}: {row.error}
+                    </li>
+                  ))}
+                </ul>
+              ) : null
+            }
           />
         )}
 

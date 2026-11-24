@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   FAQ_CSV_COLUMNS,
+  escapeFormulaTextField,
   faqEntryToCsvRow,
   parseCsv,
   parseFaqCsv,
   serializeCsv,
+  unescapeFormulaTextField,
   validateCsvHeader,
 } from '../csv';
 
@@ -159,5 +161,70 @@ describe('parseFaqCsv row validation', () => {
 
   it('rejects an empty file', () => {
     expect(() => parseFaqCsv('')).toThrow(/trống/);
+  });
+});
+
+describe('formula injection guard', () => {
+  it('prefixes every formula starter with an apostrophe', () => {
+    expect(escapeFormulaTextField('=HYPERLINK(A1)')).toBe("'=HYPERLINK(A1)");
+    expect(escapeFormulaTextField('+1')).toBe("'+1");
+    expect(escapeFormulaTextField('-x')).toBe("'-x");
+    expect(escapeFormulaTextField('@cmd')).toBe("'@cmd");
+    expect(escapeFormulaTextField('\tcmd')).toBe("'\tcmd");
+    expect(escapeFormulaTextField('\rcmd')).toBe("'\rcmd");
+    expect(escapeFormulaTextField('safe')).toBe('safe');
+  });
+
+  it('escapes formula cells on export', () => {
+    const csv = serializeCsv([
+      {
+        question: '=HYPERLINK(A1)',
+        answer: '+1',
+        categories: '-x',
+        schema: false,
+        position: 1,
+      },
+    ]);
+    const dataLine = csv.trimEnd().split('\r\n')[1];
+    expect(dataLine).toBe("'=HYPERLINK(A1),'+1,'-x,false,1");
+  });
+
+  it('round-trips formula text through export and import', () => {
+    const rows = [
+      {
+        question: '=HYPERLINK(A1)',
+        answer: '=SUM(A1:A2)',
+        categories: '-danger',
+        schema: false,
+        position: 4,
+      },
+      {
+        question: '@cmd',
+        answer: '+1',
+        categories: 'Khác',
+        schema: true,
+        position: 5,
+      },
+    ];
+
+    const parsed = parseFaqCsv(serializeCsv(rows));
+
+    expect(parsed[0].value).toMatchObject({
+      question: '=HYPERLINK(A1)',
+      answer: '=SUM(A1:A2)',
+      categories: '-danger',
+      position: 4,
+    });
+    expect(parsed[1].value).toMatchObject({
+      question: '@cmd',
+      answer: '+1',
+      categories: 'Khác',
+    });
+  });
+
+  it('strips exactly one guard apostrophe and keeps unrelated ones', () => {
+    expect(unescapeFormulaTextField("'=HYPERLINK(A1)")).toBe('=HYPERLINK(A1)');
+    expect(unescapeFormulaTextField("'hello")).toBe("'hello");
+    expect(unescapeFormulaTextField("''=x")).toBe("''=x");
   });
 });

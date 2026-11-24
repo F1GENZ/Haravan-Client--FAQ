@@ -8,13 +8,25 @@ export const FAQ_CSV_COLUMNS = [
 
 const UTF8_BOM = "\uFEFF";
 const ROW_SEPARATOR = "\r\n";
+const FORMULA_LEADING = /^[=+\-@\t\r]/;
+
+export function escapeFormulaTextField(value) {
+  const text = String(value);
+  return FORMULA_LEADING.test(text) ? `'${text}` : text;
+}
+
+export function unescapeFormulaTextField(value) {
+  const text = String(value);
+  return /^'[=+\-@\t\r]/.test(text) ? text.slice(1) : text;
+}
 
 function serializeField(value) {
   const text = value === null || value === undefined ? "" : String(value);
-  if (/[",\r\n]/.test(text)) {
-    return `"${text.replace(/"/g, '""')}"`;
+  const safe = escapeFormulaTextField(text);
+  if (/[",\r\n]/.test(safe)) {
+    return `"${safe.replace(/"/g, '""')}"`;
   }
-  return text;
+  return safe;
 }
 
 export function serializeCsv(rows) {
@@ -113,8 +125,12 @@ export function parseFaqCsv(text) {
       continue;
     }
 
-    const [question, answer, categories, schemaRaw, positionRaw] = cells;
-    if (!String(question).trim()) {
+    const question = unescapeFormulaTextField(cells[0]);
+    const answer = unescapeFormulaTextField(cells[1]);
+    const categories = unescapeFormulaTextField(cells[2]);
+    const schemaRaw = cells[3];
+    const positionRaw = cells[4];
+    if (!question.trim()) {
       rows.push({ line, error: "Câu hỏi không được để trống." });
       continue;
     }
@@ -140,9 +156,9 @@ export function parseFaqCsv(text) {
       line,
       error: null,
       value: {
-        question: String(question).trim(),
-        answer: String(answer),
-        categories: String(categories).trim(),
+        question: question.trim(),
+        answer,
+        categories: categories.trim(),
         schema: schemaText === "true" || schemaText === "1",
         position,
       },
