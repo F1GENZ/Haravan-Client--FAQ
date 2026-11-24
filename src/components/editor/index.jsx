@@ -32,6 +32,7 @@ const TinyEditor = ({ initialValue, onEditorChange }) => {
         toolbar:
           "accordion accordionremove | blocks fontsize | bold italic underline strikethrough | align numlist bullist | outdent indent| link table hr charmap forecolor backcolor removeformat code",
         branding: false,
+        entity_encoding: "raw",
         paste_preprocess: (plugin, args) => {
           args.content = args.content.replace(/<img[^>]*>/gi, '');
         },
