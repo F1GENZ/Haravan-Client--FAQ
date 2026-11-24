@@ -1,8 +1,9 @@
-import Metafields from "../pages/metafields/index";  
+import Metafields from "../pages/metafields/index";
 import Login from "../pages/auth/login/index";
 import GrandService from "../pages/auth/grandservice/index";
 import Introduction from "../pages/introduction/index";
 import Guide from "../pages/guide/index";
+import Storefront from "../pages/storefront/index";
 
 export const routes = [
   {
@@ -10,6 +11,30 @@ export const routes = [
     layout: true,
     isPrivate: false,
     page: <Metafields />,
+  },
+  {
+    path: "/products",
+    layout: true,
+    isPrivate: false,
+    page: <Metafields />,
+  },
+  {
+    path: "/collections",
+    layout: true,
+    isPrivate: false,
+    page: <Metafields />,
+  },
+  {
+    path: "/pages",
+    layout: true,
+    isPrivate: false,
+    page: <Metafields />,
+  },
+  {
+    path: "/storefront",
+    layout: true,
+    isPrivate: false,
+    page: <Storefront />,
   },
   {
     path: "/introduction",

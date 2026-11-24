@@ -1,80 +1,146 @@
-import { useState, useMemo } from 'react';
-import { useSearchParams } from "react-router";
-import { useLocation } from "react-router-dom";
-import { Popconfirm, Button, Tag, List, Flex, Spin, Typography, Collapse } from 'antd';
-import { SettingOutlined } from '@ant-design/icons';
-import { metafieldsService } from '../../common/MetafieldsServices';
+import { useMemo, useState } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
+import {
+  Button,
+  Collapse,
+  Flex,
+  List,
+  Popconfirm,
+  Space,
+  Spin,
+  Tag,
+  Typography,
+} from 'antd';
+import {
+  CopyOutlined,
+  DownloadOutlined,
+  OrderedListOutlined,
+  PlusOutlined,
+  SettingOutlined,
+  UploadOutlined,
+} from '@ant-design/icons';
+import {
+  useCreateFaq,
+  useDeleteFaq,
+  useFaqs,
+  useReorderFaqs,
+} from '../../common/MetafieldsServices';
+import { useCanWrite } from '../../common/TrialService';
+import { downloadTextFile } from '../../common/download';
+import { hasSession } from '../../lib/session';
+import { RESOURCE_TYPES, resourceTypeFromPath } from '../../lib/resources';
+import {
+  buildDuplicatePayload,
+  DEFAULT_CATEGORY,
+  groupFaqs,
+  nextFaqPosition,
+} from '../../lib/faq';
+import { faqEntryToCsvRow, serializeCsv } from '../../lib/csv';
 import ModalMetafields from './modal';
+import SortableFaqList from './sortable-list';
+import CsvImportModal from './csv-import';
 
 const { Title, Paragraph, Text } = Typography;
-
 
 const Metafields = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const type = location.pathname.replace('/', '') || "shop";
-  const objectid = searchParams.get("id") || "0";
 
-  const [isLoading, setIsLoading] = useState(false);
+  const resourceType = resourceTypeFromPath(location.pathname) ?? 'shop';
+  const resourceConfig = RESOURCE_TYPES[resourceType] ?? null;
+  const resourceTitle = searchParams.get('title') ?? '';
+  const rawObjectid = searchParams.get('id') ?? '';
+  const objectid = resourceType === 'shop' ? '0' : rawObjectid;
+  const hasTarget =
+    resourceType === 'shop' || (objectid !== '' && objectid !== '0');
+
+  const { data: entries = [], isLoading } = useFaqs({
+    type: resourceType,
+    objectid,
+  });
+  const createFaqMutation = useCreateFaq();
+  const deleteFaqMutation = useDeleteFaq();
+  const reorderFaqMutation = useReorderFaqs();
+  const canWrite = useCanWrite();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [dataForModal, setDataForModal] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [orderEntries, setOrderEntries] = useState(null);
+  const [isCsvOpen, setIsCsvOpen] = useState(false);
 
-  const orgid = sessionStorage.getItem("orgid");
-  const hasOrgid = orgid && orgid !== 'null' && orgid !== 'undefined' && orgid.trim() !== '';
-  
-  const { isLoading: field_loading, data: field_data, error } = metafieldsService.useGetMetafields({ type, namespace: 'store.faqs.data', objectid });
-  const deleteMetafieldMutation = metafieldsService.useDeleteField();
+  const groups = useMemo(() => groupFaqs(entries), [entries]);
+  const nextPosition = useMemo(() => nextFaqPosition(entries), [entries]);
 
-  // Group FAQs by category - MUST be called before any early returns (Rules of Hooks)
-  const groupedFAQs = useMemo(() => {
-    if (!field_data || field_data.length === 0) return {};
-    
-    const grouped = {};
-    
-    field_data.forEach((item) => {
-      try {
-        const value = item.value ? JSON.parse(item.value) : {};
-        const category = value.categories?.trim() || 'Không phân loại';
-        
-        if (!grouped[category]) {
-          grouped[category] = [];
-        }
-        grouped[category].push({ ...item, parsedValue: value });
-      } catch (e) {
-        console.error('Error parsing FAQ:', e);
-        const category = 'Không phân loại';
-        if (!grouped[category]) {
-          grouped[category] = [];
-        }
-        grouped[category].push({ ...item, parsedValue: {} });
-      }
-    });
-    
-    // Sort categories alphabetically
-    const sortedCategories = Object.keys(grouped).sort();
-    const sortedGrouped = {};
-    sortedCategories.forEach(cat => {
-      sortedGrouped[cat] = grouped[cat];
-    });
-    
-    return sortedGrouped;
-  }, [field_data]);
+  const headerTitle = useMemo(() => {
+    if (resourceType === 'shop') return 'Câu hỏi & câu trả lời của shop';
+    const target = resourceTitle || `#${objectid}`;
+    return `Câu hỏi cho ${RESOURCE_TYPES[resourceType].label}: ${target}`;
+  }, [resourceType, resourceTitle, objectid]);
 
-  const categories = Object.keys(groupedFAQs);
-  const displayData = field_data || [];
+  const openCreate = () => {
+    setEditing(null);
+    setIsModalOpen(true);
+  };
 
-  // Early returns AFTER all hooks
-  if (field_loading || isLoading) return <Spin fullscreen />;
+  const openEdit = (entry) => {
+    setEditing(entry);
+    setIsModalOpen(true);
+  };
 
-  // Show message if no orgid instead of error
-  if (!hasOrgid) {
+  const handleDuplicate = (entry) => {
+    const payload = buildDuplicatePayload(
+      { ...entry, type: resourceType, objectid },
+      nextPosition
+    );
+    createFaqMutation.mutate(payload);
+  };
+
+  const handleExport = () => {
+    if (entries.length === 0) return;
+    const csv = serializeCsv(entries.map(faqEntryToCsvRow));
+    downloadTextFile(
+      `faq-${resourceType}-${objectid || '0'}.csv`,
+      csv
+    );
+  };
+
+  const handleSaveOrder = () => {
+    if (!orderEntries) return;
+    reorderFaqMutation.mutate(
+      {
+        type: resourceType,
+        objectid: objectid || '0',
+        order: orderEntries.map((entry) => entry.id),
+      },
+      { onSuccess: () => setOrderEntries(null) }
+    );
+  };
+
+  if (!hasSession()) {
     return (
       <div className='p-6 text-center'>
         <Title level={3} className='text-gray-500'>
           Vui lòng đăng nhập để sử dụng tính năng này
         </Title>
         <Paragraph>
-          Bạn cần đăng nhập với tài khoản Haravan để quản lý FAQ.
+          Bạn cần mở ứng dụng từ Haravan để có phiên làm việc hợp lệ.
+        </Paragraph>
+        <Button type='primary' href='/install/login'>
+          Đăng nhập
+        </Button>
+      </div>
+    );
+  }
+
+  if (!hasTarget) {
+    return (
+      <div className='p-6 text-center'>
+        <Title level={3} className='text-gray-500'>
+          Chưa chọn {resourceConfig?.label}
+        </Title>
+        <Paragraph>
+          Dùng thanh tìm kiếm phía trên để chọn {resourceConfig?.label} cần quản lý
+          câu hỏi.
         </Paragraph>
       </div>
     );
@@ -83,76 +149,169 @@ const Metafields = () => {
   return (
     <div className='space-y-2!'>
       <div className='sticky top-0 h-min-content bg-white p-4 shadow-md z-10'>
-        <Flex justify='space-between' align='center' gap={16}>
-          <h2 className='text-lg text-red-600 font-semibold mb-0!'>⁉ Danh sách các câu hỏi & câu trả lời</h2>
-          <Button type='primary' onClick={() => {
-            setDataForModal({ type, objectid, field_data });
-            setIsModalOpen(true);
-          }}>
-            Thêm câu hỏi mới
-          </Button>
+        <Flex justify='space-between' align='center' gap={16} wrap>
+          <h2 className='text-lg text-red-600 font-semibold mb-0!'>
+            ⁉ {headerTitle}
+          </h2>
+          <Space wrap>
+            <Button
+              type='primary'
+              icon={<PlusOutlined />}
+              onClick={openCreate}
+              disabled={!canWrite}
+            >
+              Thêm câu hỏi mới
+            </Button>
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={handleExport}
+              disabled={entries.length === 0}
+            >
+              Xuất CSV
+            </Button>
+            <Button
+              icon={<UploadOutlined />}
+              onClick={() => setIsCsvOpen(true)}
+              disabled={!canWrite}
+            >
+              Nhập CSV
+            </Button>
+            {orderEntries ? (
+              <>
+                <Button
+                  type='primary'
+                  loading={reorderFaqMutation.isPending}
+                  onClick={handleSaveOrder}
+                  disabled={!canWrite}
+                >
+                  Lưu thứ tự
+                </Button>
+                <Button onClick={() => setOrderEntries(null)}>Hủy</Button>
+              </>
+            ) : (
+              <Button
+                icon={<OrderedListOutlined />}
+                onClick={() => setOrderEntries(entries)}
+                disabled={!canWrite || entries.length < 2}
+              >
+                Sắp xếp
+              </Button>
+            )}
+          </Space>
         </Flex>
-        <ModalMetafields isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} isLoading={isLoading} setIsLoading={setIsLoading} fields={dataForModal} />
+        <div className='mt-2'>
+          <Text className='text-gray-500'>
+            {entries.length > 0
+              ? `${entries.length} câu hỏi`
+              : 'Chưa có câu hỏi nào'}
+          </Text>
+        </div>
       </div>
+
       <div className='p-4'>
-        {displayData.length === 0 && !field_loading && (
+        {isLoading && (
+          <div className='text-center py-8'>
+            <Spin />
+          </div>
+        )}
+
+        {!isLoading && entries.length === 0 && (
           <div className='text-center py-8'>
             <Text className='text-gray-500'>
               Chưa có câu hỏi nào. Hãy thêm câu hỏi mới để bắt đầu!
             </Text>
           </div>
         )}
-        
-        {categories.length > 0 && (
-          <Collapse 
-            defaultActiveKey={categories.length > 0 ? categories : undefined}
+
+        {!isLoading && orderEntries && (
+          <div className='space-y-3'>
+            <Text type='secondary'>
+              Kéo thả để đổi thứ tự hiển thị trên website, sau đó bấm "Lưu thứ tự".
+            </Text>
+            <SortableFaqList entries={orderEntries} onChange={setOrderEntries} />
+          </div>
+        )}
+
+        {!isLoading && !orderEntries && groups.length > 0 && (
+          <Collapse
+            key={groups.map((group) => group.category).join('|')}
+            defaultActiveKey={groups.map((group) => group.category)}
             ghost
-            size="large"
-            items={categories.map((category) => ({
-              key: category,
+            size='large'
+            items={groups.map((group) => ({
+              key: group.category,
               label: (
                 <Flex justify='space-between' align='center'>
                   <span style={{ fontSize: '16px', fontWeight: 600 }}>
-                    📁 {category}
+                    📁 {group.category}
                   </span>
-                  <Tag color="blue">{groupedFAQs[category].length} câu hỏi</Tag>
+                  <Tag color='blue'>{group.items.length} câu hỏi</Tag>
                 </Flex>
               ),
               children: (
                 <List
-                  itemLayout="horizontal"
-                  dataSource={groupedFAQs[category]}
+                  itemLayout='horizontal'
+                  dataSource={group.items}
                   renderItem={(item) => {
-                    const value = item.parsedValue || {};
-                    const metafieldid = item.id;
+                    const value = item.parsedValue ?? {};
+                    const category = value.categories || DEFAULT_CATEGORY;
                     return (
-                      <List.Item 
+                      <List.Item
                         className='bg-gray-50 border border-gray-200 shadow mb-4! px-4! py-2! rounded'
                         actions={[
-                          value?.schema ? <Tag color="green">Schema Markup</Tag> : null,
-                          <Button 
-                            type="text" 
-                            icon={<SettingOutlined />} 
-                            size="medium"
-                            onClick={() => {
-                              setDataForModal({ ...value, objectid, metafieldid, type, field_data });
-                              setIsModalOpen(true);
-                            }}
+                          value.schema ? (
+                            <Tag color='green' key='schema'>
+                              Schema Markup
+                            </Tag>
+                          ) : null,
+                          <Button
+                            key='duplicate'
+                            type='text'
+                            icon={<CopyOutlined />}
+                            onClick={() => handleDuplicate(item)}
+                            disabled={!canWrite}
+                          >
+                            Nhân bản
+                          </Button>,
+                          <Button
+                            key='edit'
+                            type='text'
+                            icon={<SettingOutlined />}
+                            onClick={() => openEdit(item)}
+                            disabled={!canWrite}
                           >
                             Chỉnh sửa
                           </Button>,
                           <Popconfirm
-                            title="Xóa câu hỏi"
-                            description="Bạn có chắc muốn xóa câu hỏi này không?"
-                            onConfirm={async () => await deleteMetafieldMutation.mutateAsync({ ...value, objectid, metafieldid, type })}
-                            okText="Có"
-                            cancelText="Không"
+                            key='delete'
+                            title='Xóa câu hỏi'
+                            description='Bạn có chắc muốn xóa câu hỏi này không?'
+                            onConfirm={() =>
+                              deleteFaqMutation.mutate({ metafieldid: item.id })
+                            }
+                            okText='Có'
+                            cancelText='Không'
+                            disabled={!canWrite}
                           >
-                            <Button danger>Xóa</Button>
-                          </Popconfirm>
+                            <Button danger disabled={!canWrite}>
+                              Xóa
+                            </Button>
+                          </Popconfirm>,
                         ]}
                       >
-                        <Typography.Title className='mb-0!' level={5}>{value.question}</Typography.Title>
+                        <List.Item.Meta
+                          title={
+                            <Typography.Title className='mb-0!' level={5}>
+                              {value.question}
+                            </Typography.Title>
+                          }
+                          description={
+                            <span className='text-xs text-gray-500'>
+                              {category}
+                              {item.position ? ` · Vị trí ${item.position}` : ''}
+                            </span>
+                          }
+                        />
                       </List.Item>
                     );
                   }}
@@ -162,6 +321,26 @@ const Metafields = () => {
           />
         )}
       </div>
+
+      <ModalMetafields
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        editing={editing}
+        type={resourceType}
+        objectid={objectid || '0'}
+        nextPosition={nextPosition}
+        entries={entries}
+        canWrite={canWrite}
+      />
+
+      <CsvImportModal
+        open={isCsvOpen}
+        onClose={() => setIsCsvOpen(false)}
+        type={resourceType}
+        objectid={objectid || '0'}
+        entries={entries}
+        canWrite={canWrite}
+      />
     </div>
   );
 };

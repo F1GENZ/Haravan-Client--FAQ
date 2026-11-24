@@ -1,86 +1,33 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import BaseService from "./BaseService";
+import { useQuery } from "@tanstack/react-query";
 import httpClient from "../config/AxiosConfig";
-import { message } from "antd";
+import { hasSession } from "../lib/session";
+import { toResult } from "./apiResult";
 
-export default class TrialService extends BaseService {
-  useGetTrialInfo = (orgid) => {
-    const queryClient = useQueryClient();
-    return useQuery({
-      queryKey: ["trial", orgid],
-      queryFn: async () => {
-        // Return default if no orgid
-        if (!orgid || orgid === 'null' || orgid === 'undefined' || orgid.trim() === '') {
-          return {
-            success: false,
-            data: {
-              status: 'not_authenticated',
-              expires_at: null,
-              days_remaining: 0,
-              is_unlimited: false,
-            },
-          };
-        }
+export const DEFAULT_TRIAL = {
+  status: "unknown",
+  expires_at: null,
+  days_remaining: 0,
+  is_unlimited: false,
+  billing_enforced: false,
+  can_write: true,
+};
 
-        try {
-          const cache = queryClient.getQueryData(["trial", orgid]);
-          if (cache) return cache;
-
-          const response = await httpClient.get(`/api/oauth/install/trial?orgid=${orgid}`);
-          return this.toResult(response);
-        } catch (error) {
-          const handleError = this.toResultError(error);
-          // Don't show error message for trial info, just return default silently
-          return {
-            success: false,
-            data: {
-              status: 'error',
-              expires_at: null,
-              days_remaining: 0,
-              is_unlimited: false,
-            },
-          };
-        }
-      },
-      select: (response) => {
-        if (response?.data) return response.data;
-        return {
-          status: 'not_authenticated',
-          expires_at: null,
-          days_remaining: 0,
-          is_unlimited: false,
-        };
-      },
-      enabled: !!orgid && orgid !== 'null' && orgid !== 'undefined', // Only run query if orgid exists
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: false, // Don't refetch on focus to avoid errors
-      retry: false, // Don't retry to avoid multiple error messages
-    });
-  };
-
-  useSetTrialUnlimited = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-      mutationFn: async (orgid) => {
-        try {
-          const response = await httpClient.post(`/api/oauth/install/trial/unlimited`, { orgid });
-          return this.toResult(response);
-        } catch (error) {
-          const handleError = this.toResultError(error);
-          message.error(handleError?.errorMessage || 'Không thể kích hoạt trial vĩnh viễn');
-          throw error;
-        }
-      },
-      onSuccess: (data, orgid) => {
-        queryClient.invalidateQueries({ queryKey: ["trial", orgid] });
-        message.success('Đã kích hoạt trial vĩnh viễn thành công!');
-      },
-      onError: (error) => {
-        console.error('Error setting trial unlimited:', error);
-      },
-    });
-  };
+export function useTrialInfo() {
+  return useQuery({
+    queryKey: ["trial"],
+    queryFn: async () => {
+      if (!hasSession()) return DEFAULT_TRIAL;
+      const response = await httpClient.get("/api/oauth/install/trial");
+      return toResult(response).data ?? DEFAULT_TRIAL;
+    },
+    enabled: hasSession(),
+    staleTime: 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
 }
 
-export const trialService = new TrialService();
-
+export function useCanWrite() {
+  const { data } = useTrialInfo();
+  return data ? data.can_write !== false : true;
+}

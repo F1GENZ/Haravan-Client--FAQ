@@ -1,130 +1,129 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { Layout, Flex, Menu, AutoComplete, Input } from 'antd';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, AutoComplete, Flex, Input, Layout, Menu } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import { trialService } from '../../common/TrialService';
-import { productService } from '../../common/ProductService';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useResourceSearch } from '../../common/ResourceService';
+import { useTrialInfo } from '../../common/TrialService';
+import { hasSession } from '../../lib/session';
+import { RESOURCE_TYPES, resourceTypeFromPath } from '../../lib/resources';
+import { TRIAL_EXPIRED_MESSAGE } from '../../lib/messages';
 
 const { Header, Footer, Content, Sider } = Layout;
 
+const NAV_ITEMS = [
+  { key: '/', label: '🏠 Shop' },
+  { key: '/products', label: '🛍️ Sản phẩm' },
+  { key: '/collections', label: '📁 Danh mục' },
+  { key: '/pages', label: '📄 Trang' },
+  { key: '/storefront', label: '🌐 Hiển thị trên website' },
+  { type: 'divider' },
+  { key: '/introduction', label: '⭐ Giới thiệu' },
+  { key: '/guide', label: '📑 Hướng dẫn sử dụng' },
+];
+
 const MainLayout = ({ children }) => {
   const navigate = useNavigate();
-  const orgid = sessionStorage.getItem("orgid");
-  const hasOrgid = orgid && orgid !== 'null' && orgid !== 'undefined' && orgid.trim() !== '';
-  const { data: trialInfo, isLoading: trialLoading } = trialService.useGetTrialInfo(orgid);
-  
+  const location = useLocation();
+  const sessionReady = hasSession();
+  const { data: trialInfo, isLoading: trialLoading } = useTrialInfo();
+
+  const resourceType = resourceTypeFromPath(location.pathname);
+  const resourceConfig = resourceType ? RESOURCE_TYPES[resourceType] : null;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const debounceTimerRef = useRef(null);
 
-  // Debounce search query to reduce API calls (respect Haravan rate limit)
   useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    debounceTimerRef.current = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-    }, 500); // 500ms debounce delay
-
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 500);
+    return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const { data: searchResults, isLoading: searchLoading } = productService.useSearchProducts(debouncedQuery, 10);
+  useEffect(() => {
+    setSearchQuery('');
+    setDebouncedQuery('');
+  }, [location.pathname]);
 
-  // Format search options for AutoComplete
+  const { data: searchResults = [], isFetching: searchLoading } = useResourceSearch(
+    resourceType ?? undefined,
+    debouncedQuery,
+    10
+  );
+
   const searchOptions = useMemo(() => {
-    if (!searchResults || searchResults.length === 0) return [];
-    
-    return searchResults.map((product) => ({
-      value: product.title,
+    return (searchResults ?? []).map((item) => ({
+      value: String(item.id),
+      item,
       label: (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {product.image && (
-            <img 
-              src={product.image} 
-              alt={product.title}
+          {item.image && (
+            <img
+              src={item.image}
+              alt={item.title}
               style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '4px' }}
             />
           )}
-          <div style={{ fontWeight: 500 }}>{product.title}</div>
+          <div style={{ fontWeight: 500 }}>{item.title}</div>
         </div>
       ),
-      product: product,
     }));
   }, [searchResults]);
 
-  const handleSearchSelect = (value, option) => {
-    if (option?.product) {
-      const orgid = sessionStorage.getItem("orgid");
-      const locale = new URLSearchParams(window.location.search).get("locale") || "vi";
-      const productId = option.product.id;
-      navigate(`/products?id=${productId}${orgid ? `&orgid=${orgid}` : ''}&locale=${locale}`);
-      setSearchQuery('');
-    }
+  const handleSearchSelect = (_value, option) => {
+    const item = option?.item;
+    if (!item || !resourceConfig) return;
+
+    const params = new URLSearchParams({
+      id: String(item.id),
+      title: item.title ?? '',
+    });
+    navigate(`${resourceConfig.path}?${params.toString()}`);
+    setSearchQuery('');
   };
 
-  const handleSearch = (value) => {
-    if (value && value.trim()) {
-      const orgid = sessionStorage.getItem("orgid");
-      const locale = new URLSearchParams(window.location.search).get("locale") || "vi";
-      navigate(`/products?search=${encodeURIComponent(value.trim())}${orgid ? `&orgid=${orgid}` : ''}&locale=${locale}`);
-      setSearchQuery('');
-    }
-  };
+  const navKey = NAV_ITEMS.some((item) => item.key === location.pathname)
+    ? location.pathname
+    : '/';
 
   const renderTrialInfo = () => {
-    // Don't show trial info if no orgid
-    if (!hasOrgid) {
-      return null;
+    if (!sessionReady) return null;
+    if (trialLoading) return <p>Đang tải...</p>;
+    if (!trialInfo) return null;
+
+    if (trialInfo.can_write === false) {
+      return <p><strong className='text-red-500'>⚠️ Đã hết hạn dùng thử</strong></p>;
     }
-
-    if (trialLoading) {
-      return <p>Đang tải...</p>;
+    if (trialInfo.is_unlimited || trialInfo.status === 'active') {
+      return <p><strong className='text-green-500'>✓ Đã kích hoạt</strong></p>;
     }
-
-    if (!trialInfo) {
-      return null;
+    if (trialInfo.days_remaining > 0) {
+      return (
+        <p>
+          Bạn còn <strong className='text-red-500'>{trialInfo.days_remaining} ngày</strong> dùng thử
+        </p>
+      );
     }
-
-    const { days_remaining, is_unlimited, status } = trialInfo;
-
-    // Don't show if not authenticated or error
-    if (status === 'not_authenticated' || status === 'error' || status === 'not_found') {
-      return null;
-    }
-
-    if (is_unlimited || status === 'active') {
-      return <p><strong className='text-green-500 text-!'>✓ Đã kích hoạt vĩnh viễn</strong></p>;
-    }
-
-    if (days_remaining <= 0) {
-      return <p><strong className='text-red-500 text-!'>⚠️ Đã hết hạn dùng thử</strong></p>;
-    }
-
-    return <p>Bạn còn <strong className='text-red-500 text-!'>{days_remaining} ngày</strong> dùng thử</p>;
+    return null;
   };
 
   return (
     <Layout className='h-screen w-screen'>
-      <Sider width="210">
-        <Flex className='flex-col h-full bg-[#001529] space-y-2'>
+      <Sider width="230">
+        <Flex className='flex-col h-full bg-[#001529]'>
           <Header className='bg-blue-300! h-fit! p-2!'>
             <Flex justify='between' align='center' gap={16}>
               <img src='/logo.png' alt='Logo' className='h-auto max-w-6' />
               <h1 className='text-xl font-bold'>F1GENZ FAQ</h1>
             </Flex>
           </Header>
-          <div className='flex-1'>
-            <ul className='*:py-3! *:px-1!'>
-              <li><Link className='text-white! block text-base!' to="/">🏠 Trang tổng</Link></li>
-              <li><Link className='text-white! block text-base!' to="/introduction">⭐ Giới thiệu</Link></li>
-              <li><Link className='text-white! block text-base!' to="/guide">📑 Hướng dẫn sử dụng</Link></li>
-            </ul>
+          <div className='flex-1 overflow-y-auto'>
+            <Menu
+              theme='dark'
+              mode='inline'
+              selectedKeys={[navKey]}
+              items={NAV_ITEMS}
+              onClick={({ key }) => navigate(key)}
+              style={{ background: 'transparent', borderInlineEnd: 'none' }}
+            />
           </div>
           <Footer className='bg-transparent! h-fit! p-2! *:text-white text-xs! space-y-1'>
             {renderTrialInfo()}
@@ -133,9 +132,16 @@ const MainLayout = ({ children }) => {
         </Flex>
       </Sider>
       <Content className='flex-1 px-4! my-2!'>
-        <div className='w-full h-full flex flex-col'>
-          {hasOrgid && (
-            <div className='bg-white shadow-md rounded-t-lg p-4 border-b border-gray-200'>
+        <div className='w-full h-full flex flex-col space-y-2'>
+          {sessionReady && trialInfo?.can_write === false && (
+            <Alert
+              type='warning'
+              showIcon
+              message={TRIAL_EXPIRED_MESSAGE}
+            />
+          )}
+          {sessionReady && resourceConfig && (
+            <div className='bg-white shadow-md rounded-lg p-4 border-b border-gray-200'>
               <div className='flex justify-center'>
                 <AutoComplete
                   style={{ width: '100%', maxWidth: '600px' }}
@@ -144,7 +150,13 @@ const MainLayout = ({ children }) => {
                   onSearch={setSearchQuery}
                   value={searchQuery}
                   filterOption={false}
-                  notFoundContent={searchLoading ? 'Đang tìm kiếm...' : debouncedQuery ? 'Không tìm thấy sản phẩm' : 'Nhập để tìm kiếm'}
+                  notFoundContent={
+                    searchLoading
+                      ? 'Đang tìm kiếm...'
+                      : debouncedQuery.trim().length >= 2
+                        ? `Không tìm thấy ${resourceConfig.label}`
+                        : 'Nhập ít nhất 2 ký tự'
+                  }
                   allowClear
                   dropdownStyle={{
                     maxHeight: '400px',
@@ -153,27 +165,23 @@ const MainLayout = ({ children }) => {
                   }}
                 >
                   <Input
-                    placeholder="Tìm kiếm sản phẩm..."
+                    placeholder={resourceConfig.searchPlaceholder}
                     prefix={<SearchOutlined style={{ color: '#999' }} />}
                     size="large"
-                    onPressEnter={(e) => {
-                      const value = e.target.value;
-                      if (value && value.trim()) {
-                        handleSearch(value.trim());
-                      }
-                    }}
                     style={{ borderRadius: '8px' }}
                   />
                 </AutoComplete>
               </div>
             </div>
           )}
-          <div className='bg-white shadow-md rounded-lg flex-1 overflow-y-auto' style={{ borderRadius: hasOrgid ? '0 0 8px 8px' : '8px' }}>
+          <div
+            className='bg-white shadow-md rounded-lg flex-1 overflow-y-auto'
+            style={{ borderRadius: '8px' }}
+          >
             {children}
           </div>
         </div>
       </Content>
-
     </Layout>
   );
 };
