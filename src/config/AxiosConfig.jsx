@@ -1,5 +1,5 @@
 import axios from "axios";
-import { clearSession, getSessionToken } from "../lib/session";
+import { clearSessionToken, getSessionToken } from "../lib/session";
 
 const httpClient = axios.create({
   baseURL: import.meta.env.VITE_APP_API_URL,
@@ -24,7 +24,8 @@ httpClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
-      clearSession();
+      // The token is the credential; the org id stays so the login redirect can target the same shop.
+      clearSessionToken();
       const path = window.location.pathname;
       if (!PUBLIC_ROUTES.some((route) => path.startsWith(route))) {
         window.location.replace("/install/login");

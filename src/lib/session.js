@@ -37,6 +37,12 @@ export function getSessionToken() {
   return isStoredValue(token) ? token : null;
 }
 
+export function getOrgid() {
+  const storage = getStorage();
+  const orgid = storage ? storage.getItem(ORGID_KEY) : null;
+  return isStoredValue(orgid) ? orgid : null;
+}
+
 export function hasSession() {
   return Boolean(getSessionToken());
 }
@@ -52,9 +58,8 @@ export function storeSession({ session, orgid }) {
   }
 }
 
-export function clearSession() {
+export function clearSessionToken() {
   const storage = getStorage();
   if (!storage) return;
   storage.removeItem(SESSION_KEY);
-  storage.removeItem(ORGID_KEY);
 }

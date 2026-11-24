@@ -1,6 +1,7 @@
 import { Spin } from 'antd';
 import { useEffect } from 'react';
 import { requestLoginUrl } from '../../../common/AuthService';
+import { getOrgid } from '../../../lib/session';
 
 const Login = () => {
   useEffect(() => {
@@ -14,7 +15,7 @@ const Login = () => {
       return;
     }
 
-    requestLoginUrl()
+    requestLoginUrl(getOrgid())
       .then((response) => {
         if (response.status === 200 && typeof response.data === 'string' && response.data.trim()) {
           window.location.replace(response.data.trim());

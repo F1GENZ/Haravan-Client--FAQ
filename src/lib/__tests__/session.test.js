@@ -1,5 +1,12 @@
-import { describe, expect, it } from 'vitest';
-import { parseSessionFragment } from '../session';
+import { afterEach, describe, expect, it } from 'vitest';
+import {
+  ORGID_KEY,
+  SESSION_KEY,
+  clearSessionToken,
+  getOrgid,
+  parseSessionFragment,
+  storeSession,
+} from '../session';
 
 describe('parseSessionFragment', () => {
   it('reads the session and orgid from the hash fragment', () => {
@@ -46,5 +53,40 @@ describe('parseSessionFragment', () => {
   it('returns null for a non-string input', () => {
     expect(parseSessionFragment(null)).toBeNull();
     expect(parseSessionFragment(undefined)).toBeNull();
+  });
+});
+
+function installStorage() {
+  const data = new Map();
+  globalThis.window = {
+    sessionStorage: {
+      getItem: (key) => (data.has(key) ? data.get(key) : null),
+      setItem: (key, value) => data.set(key, String(value)),
+      removeItem: (key) => data.delete(key),
+    },
+  };
+  return data;
+}
+
+afterEach(() => {
+  delete globalThis.window;
+});
+
+describe('session storage', () => {
+  it('stores both the token and the org id', () => {
+    const data = installStorage();
+    storeSession({ session: 'abc.def', orgid: '123' });
+    expect(data.get(SESSION_KEY)).toBe('abc.def');
+    expect(data.get(ORGID_KEY)).toBe('123');
+    expect(getOrgid()).toBe('123');
+  });
+
+  it('clears only the token so the login redirect still targets the shop', () => {
+    const data = installStorage();
+    storeSession({ session: 'abc.def', orgid: '123' });
+    clearSessionToken();
+    expect(data.has(SESSION_KEY)).toBe(false);
+    expect(data.get(ORGID_KEY)).toBe('123');
+    expect(getOrgid()).toBe('123');
   });
 });
