@@ -296,7 +296,7 @@ const Metafields = () => {
                             title='Xóa câu hỏi'
                             description='Bạn có chắc muốn xóa câu hỏi này không?'
                             onConfirm={() =>
-                              deleteFaqMutation.mutate({ metafieldid: item.id })
+                              deleteFaqMutation.mutate({ type: resourceType, objectid, metafieldid: item.id })
                             }
                             okText='Có'
                             cancelText='Không'

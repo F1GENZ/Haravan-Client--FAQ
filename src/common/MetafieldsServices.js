@@ -25,9 +25,9 @@ export async function updateFaq(values) {
   return toResult(response).data;
 }
 
-export async function deleteFaq({ metafieldid }) {
+export async function deleteFaq({ type, objectid, metafieldid }) {
   const response = await httpClient.delete("/api/metafields", {
-    params: { metafieldid },
+    params: { type, objectid, metafieldid },
   });
   return toResult(response).data;
 }
