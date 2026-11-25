@@ -157,7 +157,7 @@ const Guide = () => (
       <Section icon={<CloudUploadOutlined />} color='#eb2f96' title='Bước 5: Hiển thị FAQ trên website'>
         <Paragraph style={{ margin: 0 }}>
           Mở <Link to='/storefront'>Hiển thị trên website</Link>, bấm <Text strong>Cài vào theme</Text> (hoặc{' '}
-          <Text strong>Cập nhật</Text> khi đã có bản mới) để ghi snippet vào theme đang xuất bản, rồi dán một
+          <Text strong>Cập nhật</Text> khi snippet đã cài) để ghi snippet vào theme đang xuất bản, rồi dán một
           trong hai dòng include vào template cần hiển thị.
         </Paragraph>
         <OrderedSteps

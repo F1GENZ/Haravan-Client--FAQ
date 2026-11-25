@@ -235,7 +235,10 @@ const MainLayout = ({ children }) => {
               mode='inline'
               selectedKeys={[selectedKeyFor(location.pathname)]}
               items={MENU_ITEMS}
-              onClick={({ key }) => navigate(key)}
+              onClick={({ key }) => {
+                setMobileOpen(false);
+                navigate(key);
+              }}
               style={{ borderRight: 0, marginTop: 8, background: SIDEBAR_BG }}
             />
           </div>

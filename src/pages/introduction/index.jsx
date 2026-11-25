@@ -26,7 +26,7 @@ const FEATURES = [
   {
     icon: <EditOutlined style={{ color: '#13c2c2', fontSize: 18 }} />,
     title: 'Trình soạn thảo đầy đủ',
-    text: 'Soạn câu trả lời với định dạng chữ, liên kết, danh sách, bảng và hình ảnh; phân loại câu hỏi theo chủ đề có gợi ý sẵn.',
+    text: 'Soạn câu trả lời với định dạng chữ, liên kết, danh sách và bảng; phân loại câu hỏi theo chủ đề có gợi ý sẵn.',
   },
   {
     icon: <StarOutlined style={{ color: '#faad14', fontSize: 18 }} />,
