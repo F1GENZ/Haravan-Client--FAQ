@@ -159,6 +159,16 @@ describe('parseFaqCsv row validation', () => {
     expect(rows[1].value).toMatchObject({ schema: false, position: 5 });
   });
 
+  it('accepts the position cap and rejects anything above it', () => {
+    const csv =
+      'question,answer,categories,schema,position\r\n' +
+      'Câu hỏi,Trả lời,Khác,1,1000\r\n' +
+      'Câu hỏi 2,Trả lời,Khác,1,1001\r\n';
+    const rows = parseFaqCsv(csv);
+    expect(rows[0].value).toMatchObject({ position: 1000 });
+    expect(rows[1].error).toMatch(/từ 1 đến 1000/);
+  });
+
   it('rejects an empty file', () => {
     expect(() => parseFaqCsv('')).toThrow(/trống/);
   });
