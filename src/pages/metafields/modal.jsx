@@ -4,6 +4,7 @@ import { useCreateFaq, useUpdateFaq } from '../../common/MetafieldsServices';
 import {
   buildFaqPayload,
   createFaqKey,
+  faqEditorBaseline,
   faqFormValues,
   isCompliantFaqKey,
   isFaqFormDirty,
@@ -32,9 +33,14 @@ const ModalMetafields = ({
 }) => {
   const [form] = Form.useForm();
   const [dirty, setDirty] = useState(false);
+  // The editor mounts only once the open effect seeded the form, so a session never starts
+  // from the previous question's content or from a stale TinyMCE instance.
+  const [editorState, setEditorState] = useState({ ready: false, seed: '' });
+  const editorBootstrappedRef = useRef(false);
   const initialValuesRef = useRef(null);
   if (initialValuesRef.current === null) initialValuesRef.current = faqFormValues(null);
   const compact = useCompactViewport();
+  const editorMode = compact ? 'compact' : 'wide';
   const createFaqMutation = useCreateFaq();
   const updateFaqMutation = useUpdateFaq();
   const submitting = createFaqMutation.isPending || updateFaqMutation.isPending;
@@ -59,9 +65,29 @@ const ModalMetafields = ({
     initialValuesRef.current = initial;
     form.setFieldsValue(initial);
     setDirty(false);
+    editorBootstrappedRef.current = false;
+    setEditorState({ ready: true, seed: initial.answer });
   }, [open, editing, form]);
 
+  // A width/height flip remounts the editor; hand it the answer typed so far.
+  useEffect(() => {
+    if (!open) return;
+    setEditorState((current) => {
+      const seed = String(form.getFieldValue('answer') ?? '');
+      return current.seed === seed ? current : { ...current, seed };
+    });
+  }, [open, editorMode, form]);
+
   const syncDirty = (values) => setDirty(isFaqFormDirty(initialValuesRef.current, values));
+
+  const handleEditorReady = (content) => {
+    if (editorBootstrappedRef.current) return;
+    editorBootstrappedRef.current = true;
+    const baseline = faqEditorBaseline(initialValuesRef.current, content);
+    initialValuesRef.current = baseline;
+    form.setFieldsValue({ answer: content });
+    setDirty(isFaqFormDirty(baseline, form.getFieldsValue(true)));
+  };
 
   const requestClose = () => {
     if (submitting) return;
@@ -135,6 +161,7 @@ const ModalMetafields = ({
       onCancel={requestClose}
       maskClosable={false}
       destroyOnHidden
+      afterClose={() => setEditorState({ ready: false, seed: '' })}
       footer={
         <Flex justify='flex-end' gap={8}>
           <Button onClick={requestClose} disabled={submitting}>
@@ -214,16 +241,23 @@ const ModalMetafields = ({
               </Flex>
             }
           >
-            <TinyEditor
-              key={editing?.id ?? 'new'}
-              initialValue={editing?.parsedValue?.answer ?? ''}
-              height={editorHeight}
-              compact={compact}
-              onEditorChange={(content) => {
-                form.setFieldsValue({ answer: content });
-                syncDirty(form.getFieldsValue(true));
-              }}
-            />
+            {editorState.ready ? (
+              <TinyEditor
+                key={`${editing?.id ?? 'new'}:${editorMode}`}
+                initialValue={editorState.seed}
+                height={editorHeight}
+                compact={compact}
+                onReady={handleEditorReady}
+                onEditorChange={(content) => {
+                  form.setFieldsValue({ answer: content });
+                  syncDirty(form.getFieldsValue(true));
+                }}
+              />
+            ) : (
+              <Flex justify='center' align='center' style={{ height: editorHeight }}>
+                <Spin />
+              </Flex>
+            )}
           </Suspense>
         </Form.Item>
         <Form.Item

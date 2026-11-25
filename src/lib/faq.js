@@ -141,7 +141,18 @@ export function faqFormValues(entry) {
   };
 }
 
-/** Dirtiness is a value comparison, so a failed validation or a reverted edit is not a change. */
+/**
+ * TinyMCE rewrites what it is given (plain text becomes `<p>`, indentation and entity
+ * encoding change), so the dialog adopts the editor's first render as the answer baseline:
+ * an untouched FAQ stays clean and closing it never asks to discard changes.
+ */
+export function faqEditorBaseline(initial, editorContent) {
+  return { ...initial, answer: String(editorContent ?? "") };
+}
+
+/**
+ * Dirtiness is a value comparison, so a failed validation or a reverted edit is not a change.
+ */
 export function isFaqFormDirty(initial, values) {
   if (String(values?.question ?? "") !== String(initial?.question ?? "")) return true;
   if (String(values?.categories ?? "") !== String(initial?.categories ?? "")) return true;

@@ -27,7 +27,7 @@ const DESKTOP_PLUGINS = [
 
 const COMPACT_PLUGINS = ["autolink", "lists", "link", "charmap"];
 
-const TinyEditor = ({ initialValue, onEditorChange, height = 360, compact = false }) => {
+const TinyEditor = ({ initialValue, onEditorChange, onReady, height = 360, compact = false }) => {
   return (
     <Editor
       tinymceScriptSrc="/tinymce/tinymce.min.js"
@@ -43,6 +43,9 @@ const TinyEditor = ({ initialValue, onEditorChange, height = 360, compact = fals
         resize: !compact,
         branding: false,
         entity_encoding: "raw",
+        // tinymce-react performs its own setContent first and only then calls this, so the
+        // answer reported here is the normalised HTML the editor will actually save.
+        init_instance_callback: (editor) => onReady?.(editor.getContent()),
         paste_preprocess: (plugin, args) => {
           args.content = args.content.replace(/<img[^>]*>/gi, '');
         },

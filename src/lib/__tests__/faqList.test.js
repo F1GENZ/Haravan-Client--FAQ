@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   BULK_ACTIONS,
+  LIST_ERROR_TITLE,
+  LIST_ERROR_TITLE_STALE,
   PREVIEW_MAX_LENGTH,
-  bulkActionLabel,
   describeBulkResult,
   entryCategory,
   faqCategories,
@@ -10,6 +11,7 @@ import {
   filterFaqEntries,
   hasActiveFilters,
   htmlToText,
+  listErrorCopy,
   normalizeSearchText,
   planBulkAction,
   schemaUpdatePayload,
@@ -177,11 +179,37 @@ describe('schemaUpdatePayload', () => {
   });
 });
 
-describe('bulkActionLabel', () => {
-  it('labels the delete button with the count', () => {
-    expect(bulkActionLabel(BULK_ACTIONS.delete, 3)).toBe('Xóa (3)');
-    expect(bulkActionLabel(BULK_ACTIONS.schemaOn, 3)).toBe('Bật Schema');
-    expect(bulkActionLabel(BULK_ACTIONS.schemaOff, 3)).toBe('Tắt Schema');
+describe('listErrorCopy', () => {
+  it('names a first-load failure and always adds an actionable description', () => {
+    const copy = listErrorCopy({ hasEntries: false, status: 500 });
+    expect(copy.title).toBe(LIST_ERROR_TITLE);
+    expect(copy.description).toBe('Máy chủ chưa phản hồi. Bấm Thử lại sau ít phút.');
+    expect(copy.title).not.toBe(copy.description);
+  });
+
+  it('uses the server message when the API sent one', () => {
+    const copy = listErrorCopy({ hasEntries: false, status: 400, message: 'Type is required' });
+    expect(copy.description).toBe('Type is required');
+  });
+
+  it('keeps the previous data label when a refetch fails', () => {
+    const copy = listErrorCopy({ hasEntries: true, status: 0 });
+    expect(copy.title).toBe(LIST_ERROR_TITLE_STALE);
+    expect(copy.description).not.toBe(copy.title);
+  });
+
+  it.each([
+    [false, 0, ''],
+    [false, 400, 'Dữ liệu không hợp lệ.'],
+    [false, 500, ''],
+    [true, 0, ''],
+    [true, 400, 'Dữ liệu không hợp lệ.'],
+    [true, 500, ''],
+  ])('never repeats the title (hasEntries=%s, status=%s)', (hasEntries, status, message) => {
+    const copy = listErrorCopy({ hasEntries, status, message });
+    expect(copy.title.length).toBeGreaterThan(0);
+    expect(copy.description.length).toBeGreaterThan(0);
+    expect(copy.title).not.toBe(copy.description);
   });
 });
 
@@ -202,7 +230,7 @@ describe('describeBulkResult', () => {
     });
     expect(result.type).toBe('error');
     expect(result.summary).toContain('Đã cập nhật Schema cho 1 câu hỏi');
-    expect(result.summary).toContain('bỏ qua 2 câu đang chờ đồng bộ');
+    expect(result.summary).toContain('bỏ qua 2 câu (đang chờ đồng bộ hoặc không còn trong danh sách)');
     expect(result.summary).toContain('1 câu lỗi');
     expect(result.summary).toContain('Đã dừng vì hết lượt dùng thử');
   });

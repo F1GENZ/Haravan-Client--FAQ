@@ -4,6 +4,7 @@ import {
   EDITOR_HEIGHT_MAX_COMPACT,
   EDITOR_HEIGHT_MIN,
   editorHeightFor,
+  isCompactViewport,
 } from '../editor';
 
 describe('editorHeightFor', () => {
@@ -23,8 +24,31 @@ describe('editorHeightFor', () => {
     expect(editorHeightFor(812, true)).toBeLessThan(editorHeightFor(812, false));
   });
 
+  it('never lifts a short landscape viewport above the desktop floor', () => {
+    expect(editorHeightFor(375, true)).toBe(EDITOR_HEIGHT_MIN);
+  });
+
   it('falls back to a sane height without a measurement', () => {
     expect(editorHeightFor(undefined)).toBe(450);
     expect(editorHeightFor(0, true)).toBe(360);
+  });
+});
+
+describe('isCompactViewport', () => {
+  it('treats anything at or below the phone width as compact', () => {
+    expect(isCompactViewport(375, 812)).toBe(true);
+    expect(isCompactViewport(767, 1024)).toBe(true);
+    expect(isCompactViewport(768, 1024)).toBe(false);
+    expect(isCompactViewport(1920, 1080)).toBe(false);
+  });
+
+  it('treats a short viewport as compact even when it is wide', () => {
+    expect(isCompactViewport(812, 375)).toBe(true);
+    expect(isCompactViewport(1440, 599)).toBe(true);
+    expect(isCompactViewport(1440, 600)).toBe(false);
+  });
+
+  it('is not compact without a measurement', () => {
+    expect(isCompactViewport(undefined, undefined)).toBe(false);
   });
 });

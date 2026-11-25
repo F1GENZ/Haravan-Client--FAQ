@@ -117,11 +117,24 @@ export function schemaUpdatePayload(type, objectid, entry, schema) {
   });
 }
 
-export function bulkActionLabel(action, count) {
-  if (action === BULK_ACTIONS.delete) return `Xóa (${count})`;
-  if (action === BULK_ACTIONS.schemaOn) return "Bật Schema";
-  if (action === BULK_ACTIONS.schemaOff) return "Tắt Schema";
-  return action;
+export const LIST_ERROR_TITLE = "Không tải được danh sách câu hỏi";
+export const LIST_ERROR_TITLE_STALE =
+  "Không làm mới được danh sách, đang hiển thị dữ liệu lần trước";
+
+/**
+ * The Alert title names the situation while the description must always add something:
+ * a 5xx without a server message used to repeat the title verbatim.
+ */
+export function listErrorCopy({ hasEntries = false, status = 0, message = "" } = {}) {
+  const detail = String(message ?? "").trim();
+  const fallback =
+    status === 0 || status >= 500
+      ? "Máy chủ chưa phản hồi. Bấm Thử lại sau ít phút."
+      : "Chưa tải được dữ liệu. Bấm Thử lại sau ít phút.";
+  return {
+    title: hasEntries ? LIST_ERROR_TITLE_STALE : LIST_ERROR_TITLE,
+    description: detail || fallback,
+  };
 }
 
 export function describeBulkResult({
@@ -139,7 +152,9 @@ export function describeBulkResult({
         : `Đã cập nhật Schema cho ${succeeded} câu hỏi`
     );
   }
-  if (skipped > 0) parts.push(`bỏ qua ${skipped} câu đang chờ đồng bộ`);
+  if (skipped > 0) {
+    parts.push(`bỏ qua ${skipped} câu (đang chờ đồng bộ hoặc không còn trong danh sách)`);
+  }
   if (failures.length > 0) parts.push(`${failures.length} câu lỗi`);
 
   const summary = parts.length

@@ -56,6 +56,7 @@ import {
   faqPreviewText,
   filterFaqEntries,
   hasActiveFilters,
+  listErrorCopy,
   planBulkAction,
   schemaUpdatePayload,
 } from '../../lib/faqList';
@@ -94,7 +95,6 @@ const ITEM_STYLE = {
 
 const EMPTY_BULK = {
   action: null,
-  running: false,
   processed: 0,
   total: 0,
   failures: [],
@@ -132,9 +132,18 @@ const Metafields = () => {
   const [category, setCategory] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulk, setBulk] = useState(EMPTY_BULK);
+  // One lock for the whole bulk run: handlers read the ref (state is a render behind) and
+  // every write entry point is disabled from the state.
+  const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
+  const latestEntriesRef = useRef(entries);
   const aiButtonRef = useRef(null);
 
   const targetKey = `${resourceType}:${objectid}`;
+
+  useEffect(() => {
+    latestEntriesRef.current = entries;
+  }, [entries]);
 
   useEffect(() => {
     setOrderEntries(null);
@@ -180,21 +189,29 @@ const Metafields = () => {
   const nextPosition = useMemo(() => nextFaqPosition(entries), [entries]);
   const hasPending = hasPendingFaq(entries);
   const targetName = resourceType === 'shop' ? '' : resourceTitle || `#${objectid}`;
-  const listError = error
-    ? toResultError(error).errorMessage || 'Không tải được danh sách câu hỏi.'
-    : '';
+  const listErrorResult = error ? toResultError(error) : null;
+  const listError = listErrorResult
+    ? listErrorCopy({
+        hasEntries: entries.length > 0,
+        status: listErrorResult.status,
+        message: listErrorResult.errorMessage,
+      })
+    : null;
 
   const openCreate = () => {
+    if (busyRef.current) return;
     setEditing(null);
     setIsModalOpen(true);
   };
 
   const openEdit = (entry) => {
+    if (busyRef.current) return;
     setEditing(entry);
     setIsModalOpen(true);
   };
 
   const handleDuplicate = (entry) => {
+    if (busyRef.current) return;
     const payload = buildDuplicatePayload(
       { ...entry, type: resourceType, objectid },
       nextPosition
@@ -224,6 +241,7 @@ const Metafields = () => {
   };
 
   const openSortMode = () => {
+    if (busyRef.current) return;
     setSelectedIds([]);
     setBulk(EMPTY_BULK);
     setOrderEntries(entries);
@@ -241,7 +259,7 @@ const Metafields = () => {
   };
 
   const runBulk = async (action) => {
-    if (!canWrite || bulk.running) return;
+    if (!canWrite || busyRef.current) return;
     const plan = planBulkAction(action, entries, selectedIds);
     if (plan.runnable.length === 0) {
       setBulk({
@@ -255,71 +273,87 @@ const Metafields = () => {
     const failures = [];
     const succeeded = [];
     let processed = 0;
+    let skipped = plan.skipped.length;
     let stopped = false;
 
-    setBulk({ ...EMPTY_BULK, action, running: true, total: plan.runnable.length });
+    busyRef.current = true;
+    setBusy(true);
+    setBulk({ ...EMPTY_BULK, action, total: plan.runnable.length });
 
-    for (const entry of plan.runnable) {
-      try {
-        if (action === BULK_ACTIONS.delete) {
-          await deleteFaq({
-            type: resourceType,
-            objectid: objectid || '0',
-            metafieldid: entry.id,
-          });
+    try {
+      for (const entry of plan.runnable) {
+        // Re-read the row before writing: an edit or a reorder may have landed since the
+        // plan was built, and the PUT carries the whole FAQ, not just the schema flag.
+        const latest = latestEntriesRef.current.find(
+          (item) => String(item.id) === String(entry.id)
+        );
+        if (!latest || latest.pending === true) {
+          skipped += 1;
         } else {
-          await updateFaq(
-            schemaUpdatePayload(
-              resourceType,
-              objectid || '0',
-              entry,
-              action === BULK_ACTIONS.schemaOn
-            )
-          );
+          try {
+            if (action === BULK_ACTIONS.delete) {
+              await deleteFaq({
+                type: resourceType,
+                objectid: objectid || '0',
+                metafieldid: latest.id,
+              });
+            } else {
+              await updateFaq(
+                schemaUpdatePayload(
+                  resourceType,
+                  objectid || '0',
+                  latest,
+                  action === BULK_ACTIONS.schemaOn
+                )
+              );
+            }
+            succeeded.push(String(latest.id));
+          } catch (bulkError) {
+            const result = toResultError(bulkError);
+            failures.push({
+              question: latest.parsedValue?.question || `#${latest.id}`,
+              message: result.errorMessage || 'Không xử lý được câu hỏi.',
+            });
+            if (result.status === 402) {
+              queryClient.invalidateQueries({ queryKey: ['trial'] });
+              stopped = true;
+            }
+          }
         }
-        succeeded.push(String(entry.id));
-      } catch (bulkError) {
-        const result = toResultError(bulkError);
-        failures.push({
-          question: entry.parsedValue?.question || `#${entry.id}`,
-          message: result.errorMessage || 'Không xử lý được câu hỏi.',
-        });
-        if (result.status === 402) {
-          queryClient.invalidateQueries({ queryKey: ['trial'] });
-          stopped = true;
-        }
+
+        processed += 1;
+        setBulk((current) => ({
+          ...current,
+          processed,
+          failures: [...failures],
+        }));
+        if (stopped) break;
+      }
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+
+      if (action === BULK_ACTIONS.delete && succeeded.length > 0) {
+        const removed = new Set(succeeded);
+        setSelectedIds((current) => current.filter((id) => !removed.has(String(id))));
       }
 
-      processed += 1;
-      setBulk((current) => ({
-        ...current,
-        processed,
-        failures: [...failures],
-      }));
-      if (stopped) break;
-    }
-
-    if (action === BULK_ACTIONS.delete && succeeded.length > 0) {
-      const removed = new Set(succeeded);
-      setSelectedIds((current) => current.filter((id) => !removed.has(String(id))));
-    }
-
-    setBulk({
-      action,
-      running: false,
-      processed,
-      total: plan.runnable.length,
-      failures,
-      result: describeBulkResult({
+      setBulk({
         action,
-        succeeded: succeeded.length,
+        processed,
+        total: plan.runnable.length,
         failures,
-        skipped: plan.skipped.length,
-        stopped,
-      }),
-    });
+        result: describeBulkResult({
+          action,
+          succeeded: succeeded.length,
+          failures,
+          skipped,
+          stopped,
+        }),
+      });
 
-    queryClient.invalidateQueries({ queryKey: ['faqs'] });
+      queryClient.invalidateQueries({ queryKey: ['faqs'] });
+    }
   };
 
   const sessionReady = hasSession();
@@ -388,7 +422,7 @@ const Metafields = () => {
                   type='primary'
                   loading={reorderFaqMutation.isPending}
                   onClick={handleSaveOrder}
-                  disabled={!canWrite}
+                  disabled={!canWrite || busy}
                 >
                   Lưu thứ tự
                 </Button>
@@ -398,20 +432,34 @@ const Metafields = () => {
                 <Button
                   icon={<OrderedListOutlined />}
                   onClick={openSortMode}
-                  disabled={!canWrite || entries.length < 2 || hasPending}
+                  disabled={!canWrite || entries.length < 2 || hasPending || busy}
                 >
                   Sắp xếp
                 </Button>
                 <Button icon={<DownloadOutlined />} onClick={handleExport} disabled={entries.length === 0}>
                   Xuất CSV
                 </Button>
-                <Button icon={<UploadOutlined />} onClick={() => setIsCsvOpen(true)} disabled={!canWrite}>
+                <Button
+                  icon={<UploadOutlined />}
+                  onClick={() => setIsCsvOpen(true)}
+                  disabled={!canWrite || busy}
+                >
                   Nhập CSV
                 </Button>
-                <Button ref={aiButtonRef} icon={<BulbOutlined />} onClick={() => setIsAiOpen(true)}>
+                <Button
+                  ref={aiButtonRef}
+                  icon={<BulbOutlined />}
+                  onClick={() => setIsAiOpen(true)}
+                  disabled={busy}
+                >
                   Gợi ý bằng AI
                 </Button>
-                <Button type='primary' icon={<PlusOutlined />} onClick={openCreate} disabled={!canWrite}>
+                <Button
+                  type='primary'
+                  icon={<PlusOutlined />}
+                  onClick={openCreate}
+                  disabled={!canWrite || busy}
+                >
                   Thêm câu hỏi mới
                 </Button>
               </>
@@ -433,12 +481,8 @@ const Metafields = () => {
             type='error'
             showIcon
             style={{ marginBottom: 12 }}
-            message={
-              entries.length > 0
-                ? 'Không làm mới được danh sách, đang hiển thị dữ liệu lần trước'
-                : 'Không tải được danh sách câu hỏi'
-            }
-            description={listError}
+            message={listError.title}
+            description={listError.description}
             action={
               <Button size='small' loading={isFetching} onClick={() => refetch()}>
                 Thử lại
@@ -482,7 +526,7 @@ const Metafields = () => {
             <Checkbox
               checked={allSelected}
               indeterminate={selectedIds.length > 0 && !allSelected}
-              disabled={!canWrite || selectableRows.length === 0}
+              disabled={!canWrite || selectableRows.length === 0 || busy}
               onChange={(event) => toggleAllFiltered(event.target.checked)}
               style={{ marginInlineStart: 'auto' }}
             >
@@ -502,20 +546,20 @@ const Metafields = () => {
           >
             <Text strong>Đã chọn {selectedIds.length} câu hỏi</Text>
             <Space wrap>
-              <Button size='small' onClick={() => setSelectedIds([])} disabled={bulk.running}>
+              <Button size='small' onClick={() => setSelectedIds([])} disabled={busy}>
                 Bỏ chọn
               </Button>
               <Button
                 size='small'
                 onClick={() => runBulk(BULK_ACTIONS.schemaOn)}
-                disabled={!canWrite || bulk.running}
+                disabled={!canWrite || busy}
               >
                 Bật Schema
               </Button>
               <Button
                 size='small'
                 onClick={() => runBulk(BULK_ACTIONS.schemaOff)}
-                disabled={!canWrite || bulk.running}
+                disabled={!canWrite || busy}
               >
                 Tắt Schema
               </Button>
@@ -525,10 +569,10 @@ const Metafields = () => {
                 okText='Xóa'
                 cancelText='Không'
                 okButtonProps={{ danger: true }}
-                disabled={!canWrite || bulk.running}
+                disabled={!canWrite || busy}
                 onConfirm={() => runBulk(BULK_ACTIONS.delete)}
               >
-                <Button size='small' danger disabled={!canWrite || bulk.running}>
+                <Button size='small' danger disabled={!canWrite || busy}>
                   Xóa ({selectedIds.length})
                 </Button>
               </Popconfirm>
@@ -536,9 +580,9 @@ const Metafields = () => {
           </Flex>
         ) : null}
 
-        {bulk.running || bulk.failures.length > 0 || bulk.result ? (
+        {busy || bulk.failures.length > 0 || bulk.result ? (
           <Flex vertical gap={8} style={{ marginBottom: 12 }}>
-            {bulk.running ? (
+            {busy ? (
               <div>
                 <Progress percent={bulkPercent} size='small' status='active' />
                 <Text type='secondary' style={{ fontSize: 12 }}>
@@ -562,7 +606,7 @@ const Metafields = () => {
                 }
               />
             ) : null}
-            {!bulk.running && bulk.result ? (
+            {!busy && bulk.result ? (
               <Alert
                 type={bulk.result.type}
                 showIcon
@@ -648,7 +692,7 @@ const Metafields = () => {
                         <Flex align='flex-start' gap={8} style={{ flex: '1 1 280px', minWidth: 0 }}>
                           <Checkbox
                             checked={selectedSet.has(String(item.id))}
-                            disabled={!canWrite || item.pending}
+                            disabled={!canWrite || item.pending || busy}
                             onChange={(event) => toggleRow(item.id, event.target.checked)}
                             aria-label={`Chọn câu hỏi ${value.question ?? ''}`}
                           />
@@ -686,7 +730,7 @@ const Metafields = () => {
                             type='text'
                             icon={<CopyOutlined />}
                             onClick={() => handleDuplicate(item)}
-                            disabled={!canWrite}
+                            disabled={!canWrite || busy}
                           >
                             Nhân bản
                           </Button>
@@ -694,7 +738,7 @@ const Metafields = () => {
                             type='text'
                             icon={<EditOutlined />}
                             onClick={() => openEdit(item)}
-                            disabled={!canWrite || item.pending}
+                            disabled={!canWrite || item.pending || busy}
                           >
                             Chỉnh sửa
                           </Button>
@@ -706,9 +750,14 @@ const Metafields = () => {
                             }
                             okText='Có'
                             cancelText='Không'
-                            disabled={!canWrite || item.pending}
+                            disabled={!canWrite || item.pending || busy}
                           >
-                            <Button danger type='text' icon={<DeleteOutlined />} disabled={!canWrite || item.pending}>
+                            <Button
+                              danger
+                              type='text'
+                              icon={<DeleteOutlined />}
+                              disabled={!canWrite || item.pending || busy}
+                            >
                               Xóa
                             </Button>
                           </Popconfirm>

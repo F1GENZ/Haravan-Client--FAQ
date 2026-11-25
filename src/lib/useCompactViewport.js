@@ -1,22 +1,25 @@
 import { useEffect, useState } from "react";
+import { isCompactViewport } from "./editor";
 
-export const COMPACT_VIEWPORT_QUERY = "(max-width: 767.98px)";
+const readViewport = () =>
+  typeof window === "undefined"
+    ? false
+    : isCompactViewport(window.innerWidth, window.innerHeight);
 
-const mediaMatches = () =>
-  typeof window !== "undefined" &&
-  typeof window.matchMedia === "function" &&
-  window.matchMedia(COMPACT_VIEWPORT_QUERY).matches;
-
-/** Mirrors the sidebar breakpoint so a dialog uses the same phone layout as the shell. */
+/** Mirrors the sidebar breakpoint (and the short-landscape rule) so a dialog uses the
+ * same phone layout as the shell. */
 export function useCompactViewport() {
-  const [compact, setCompact] = useState(mediaMatches);
+  const [compact, setCompact] = useState(readViewport);
 
   useEffect(() => {
-    const media = window.matchMedia(COMPACT_VIEWPORT_QUERY);
-    const onChange = (event) => setCompact(event.matches);
-    setCompact(media.matches);
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
+    const update = () => setCompact(readViewport());
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+    };
   }, []);
 
   return compact;
