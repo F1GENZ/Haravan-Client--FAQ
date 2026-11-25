@@ -1,3 +1,5 @@
+import { MAX_FAQ_POSITION } from "./faq";
+
 export const FAQ_CSV_COLUMNS = [
   "question",
   "answer",
@@ -145,8 +147,8 @@ export function parseFaqCsv(text) {
     let position = null;
     if (positionText) {
       const parsed = Number(positionText);
-      if (!Number.isInteger(parsed) || parsed < 1) {
-        rows.push({ line, error: `Vị trí không hợp lệ: "${positionRaw}".` });
+      if (!Number.isInteger(parsed) || parsed < 1 || parsed > MAX_FAQ_POSITION) {
+        rows.push({ line, error: `Vị trí phải là số nguyên từ 1 đến ${MAX_FAQ_POSITION}: "${positionRaw}".` });
         continue;
       }
       position = parsed;

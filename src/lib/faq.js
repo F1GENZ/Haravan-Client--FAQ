@@ -13,6 +13,9 @@ export function parseFaqValue(raw) {
   }
 }
 
+/** Mirrors the API cap (worker MAX_POSITION). */
+export const MAX_FAQ_POSITION = 1000;
+
 export function normalizePosition(value) {
   const position = Number(value);
   if (!Number.isInteger(position) || position < 1) return null;
