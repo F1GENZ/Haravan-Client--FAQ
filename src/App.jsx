@@ -1,6 +1,14 @@
+import { Suspense } from "react";
+import { Flex, Spin } from "antd";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { routes } from "./config/RouterConfig";
 import MainLayout from "./components/layout/index";
+
+const pageFallback = (
+  <Flex justify="center" align="center" style={{ minHeight: 320 }}>
+    <Spin />
+  </Flex>
+);
 
 function App() {
   const routesWithLayout = routes.filter((route) => route.layout !== false);
@@ -20,7 +28,9 @@ function App() {
           <Route
             key={`no-layout-${idx}`}
             path={route.path}
-            element={route.page}
+            element={
+              <Suspense fallback={pageFallback}>{route.page}</Suspense>
+            }
           />
         ))}
       </Routes>

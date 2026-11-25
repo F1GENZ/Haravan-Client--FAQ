@@ -1,8 +1,10 @@
-import { useEffect, useMemo } from 'react';
-import { AutoComplete, Button, Form, Input, Modal, Space, Switch } from 'antd';
-import TinyEditor from '../../components/editor';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
+import { AutoComplete, Button, Flex, Form, Input, Modal, Space, Spin, Switch } from 'antd';
 import { useCreateFaq, useUpdateFaq } from '../../common/MetafieldsServices';
 import { buildFaqPayload, createFaqKey, isCompliantFaqKey } from '../../lib/faq';
+
+// TinyMCE is only needed once the answer field renders, so the dialog shell stays light.
+const TinyEditor = lazy(() => import('../../components/editor'));
 
 const ModalMetafields = ({
   open,
@@ -84,7 +86,7 @@ const ModalMetafields = ({
       >
         <Form.Item
           name='schema'
-          label='Cho Google đọc câu hỏi này qua Schema Markup (JSON-LD FAQPage)'
+          label='Đưa câu hỏi này vào JSON-LD FAQPage để công cụ tìm kiếm và trợ lý AI đọc dưới dạng dữ liệu có cấu trúc'
           layout='horizontal'
           valuePropName='checked'
         >
@@ -139,11 +141,19 @@ const ModalMetafields = ({
           />
         </Form.Item>
         <Form.Item label='Câu trả lời' name='answer'>
-          <TinyEditor
-            key={editing?.id ?? 'new'}
-            initialValue={editing?.parsedValue?.answer ?? ''}
-            onEditorChange={(content) => form.setFieldsValue({ answer: content })}
-          />
+          <Suspense
+            fallback={
+              <Flex justify='center' align='center' style={{ height: 500 }}>
+                <Spin />
+              </Flex>
+            }
+          >
+            <TinyEditor
+              key={editing?.id ?? 'new'}
+              initialValue={editing?.parsedValue?.answer ?? ''}
+              onEditorChange={(content) => form.setFieldsValue({ answer: content })}
+            />
+          </Suspense>
         </Form.Item>
         <Form.Item className='text-right mb-0!'>
           <Space>
