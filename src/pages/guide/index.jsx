@@ -155,15 +155,26 @@ const Guide = () => (
       <Section icon={<CloudUploadOutlined />} color='#eb2f96' title='Bước 5: Hiển thị FAQ trên website'>
         <Paragraph style={{ margin: 0 }}>
           Mở <Link to='/storefront'>Hiển thị trên website</Link>, bấm <Text strong>Cài vào theme</Text> (hoặc{' '}
-          <Text strong>Cập nhật</Text> khi snippet đã cài) để ghi snippet vào theme đang xuất bản, rồi dán một
-          trong hai dòng include vào template cần hiển thị.
+          <Text strong>Cập nhật</Text> khi snippet đã cài) để ghi snippet vào theme đang xuất bản. Sau đó dùng
+          mục <Text strong>Chèn tự động vào template</Text>; chỉ dán tay khi bạn muốn tự kiểm soát vị trí.
         </Paragraph>
         <OrderedSteps
           items={[
-            <><Text code style={{ wordBreak: 'break-all' }}>{"{% assign faq_title = 'Câu hỏi thường gặp' %}{% include 'f1genz-faq' %}"}</Text>: đặt tiêu đề rồi tự chọn FAQ theo template (sản phẩm, danh mục, trang hoặc shop).</>,
-            <><Text code style={{ wordBreak: 'break-all' }}>{"{% assign faq_title = 'Câu hỏi thường gặp' %}{% assign faq_source = 'shop' %}{% include 'f1genz-faq' %}"}</Text>: đặt tiêu đề và luôn hiển thị FAQ của shop.</>,
+            <>Trong thẻ <Text strong>Chèn tự động vào template</Text>, tích các template cần hiển thị FAQ. Ứng dụng chọn sẵn sản phẩm, danh mục và trang khi các template đó chưa có FAQ.</>,
+            <>Nhập <Text strong>Tiêu đề hiển thị</Text> nếu muốn (tối đa 80 ký tự); để trống nếu không cần tiêu đề phía trên danh sách.</>,
+            <>Bấm <Text strong>Chèn vào template đã chọn</Text> rồi xác nhận. Ứng dụng sao lưu từng template trước khi ghi; storefront có thể mất khoảng 1 phút để cập nhật.</>,
+            <>Dùng <Text strong>Gỡ</Text> để chỉ xoá phần FAQ, hoặc <Text strong>Khôi phục bản gốc</Text> để trả template về nội dung trước khi chèn (chỉ khi template chưa bị sửa sau đó).</>,
           ]}
         />
+        <Paragraph style={{ margin: 0 }}>
+          <Text strong>Cách thủ công (dự phòng):</Text> dán một trong hai dòng include dưới đây vào template cần
+          hiển thị. Snippet tự chọn FAQ của sản phẩm, danh mục hoặc trang theo template và không hiển thị gì
+          khi chưa có câu hỏi.
+        </Paragraph>
+        <ul style={{ margin: 0, paddingLeft: 20, listStyle: 'disc', display: 'grid', gap: 6 }}>
+          <li><Text code style={{ wordBreak: 'break-all' }}>{"{% assign faq_title = 'Câu hỏi thường gặp' %}{% include 'f1genz-faq' %}"}</Text>: đặt tiêu đề rồi tự chọn FAQ theo template (sản phẩm, danh mục, trang hoặc shop).</li>
+          <li><Text code style={{ wordBreak: 'break-all' }}>{"{% assign faq_title = 'Câu hỏi thường gặp' %}{% assign faq_source = 'shop' %}{% include 'f1genz-faq' %}"}</Text>: đặt tiêu đề và luôn hiển thị FAQ của shop.</li>
+        </ul>
         <Paragraph style={{ margin: 0 }}>
           Bỏ dòng <Text code>assign faq_title</Text> nếu không muốn hiện tiêu đề. Khi bộ câu hỏi có từ 2
           phân loại trở lên, snippet nhóm câu hỏi theo <Text strong>Phân loại</Text>.
