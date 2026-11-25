@@ -1,4 +1,4 @@
-export const EDITOR_HEIGHT_MIN = 220;
+export const EDITOR_HEIGHT_MIN = 240;
 export const EDITOR_HEIGHT_MAX = 500;
 export const EDITOR_HEIGHT_MAX_COMPACT = 420;
 
