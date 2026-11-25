@@ -7,6 +7,7 @@ import {
   FileExcelOutlined,
   OrderedListOutlined,
   PlusOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import PageHeader from '../../components/page-header';
@@ -72,7 +73,7 @@ const Guide = () => (
         type='info'
         showIcon
         message='Trước khi bắt đầu'
-        description='Mở ứng dụng từ trang quản trị Haravan để đăng nhập. Phiên làm việc có hiệu lực 12 giờ; khi hết hạn, ứng dụng đưa bạn về trang đăng nhập. Khi hết hạn dùng thử, các thao tác thêm, sửa, xóa, sắp xếp, nhập CSV và cài snippet bị khóa cho đến khi F1GENZ kích hoạt.'
+        description='Mở ứng dụng từ trang quản trị Haravan để đăng nhập. Phiên làm việc có hiệu lực 12 giờ; khi hết hạn, ứng dụng đưa bạn về trang đăng nhập. Khi hết hạn dùng thử, các thao tác thêm, sửa, xóa, sắp xếp, nhập CSV, lưu gợi ý AI và cài snippet bị khóa cho đến khi F1GENZ kích hoạt.'
       />
 
       <Section icon={<AppstoreOutlined />} color='#1677ff' title='Bước 1: Chọn phạm vi quản lý'>
@@ -150,6 +151,25 @@ const Guide = () => (
         <Paragraph type='secondary' style={{ margin: 0 }}>
           Quá trình nhập chạy tuần tự với thanh tiến trình; dòng lỗi được liệt kê kèm số dòng sau khi hoàn tất.
         </Paragraph>
+      </Section>
+
+      <Section icon={<RobotOutlined />} color='#13c2c2' title='Gợi ý câu hỏi bằng AI'>
+        <Paragraph style={{ margin: 0 }}>
+          <Text strong>Gợi ý bằng AI</Text> nằm cạnh nút <Text strong>Nhập CSV</Text>: AI đọc nội dung của shop,
+          sản phẩm, danh mục hoặc trang đang chọn rồi đề xuất câu hỏi và câu trả lời mẫu.
+        </Paragraph>
+        <OrderedSteps
+          items={[
+            'Bấm "Gợi ý bằng AI" rồi bấm "Tạo gợi ý"; AI đọc nội dung trong khoảng 15 giây.',
+            'Bỏ chọn câu không dùng, sửa lại câu hỏi, câu trả lời và phân loại nếu cần.',
+            <>Bấm <Text strong>Thêm N câu đã chọn</Text> để lưu vào danh sách; mỗi câu hỏi được thêm tuần tự và câu lỗi được báo riêng.</>,
+          ]}
+        />
+        <Alert
+          type='warning'
+          showIcon
+          message='Mỗi shop có 20 lượt gợi ý mỗi ngày, đặt lại lúc 0h giờ Việt Nam. AI có thể viết sai, nên luôn kiểm tra lại nội dung trước khi lưu.'
+        />
       </Section>
 
       <Section icon={<CloudUploadOutlined />} color='#eb2f96' title='Bước 5: Hiển thị FAQ trên website'>
