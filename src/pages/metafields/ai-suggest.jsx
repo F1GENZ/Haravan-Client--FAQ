@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   AutoComplete,
@@ -37,10 +37,11 @@ const ITEM_STYLE = {
   padding: '12px 14px',
 };
 
-const AiSuggestModal = ({ open, onClose, type, objectid, entries, canWrite }) => {
+const AiSuggestModal = ({ open, onClose, type, objectid, entries, canWrite, returnFocusRef }) => {
   const queryClient = useQueryClient();
   const suggestMutation = useAiSuggest();
   const { data: quota, isError: quotaError } = useAiQuota({ enabled: open });
+  const primaryActionRef = useRef(null);
 
   const [drafts, setDrafts] = useState([]);
   const [runError, setRunError] = useState('');
@@ -60,6 +61,12 @@ const AiSuggestModal = ({ open, onClose, type, objectid, entries, canWrite }) =>
     setProgress({ processed: 0, total: 0 });
     setSaveFailures([]);
   };
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = window.setTimeout(() => primaryActionRef.current?.focus(), 0);
+    return () => window.clearTimeout(timer);
+  }, [open]);
 
   useEffect(() => {
     if (!open && !saving && !generating) resetState();
@@ -193,34 +200,64 @@ const AiSuggestModal = ({ open, onClose, type, objectid, entries, canWrite }) =>
       ? Math.round((progress.processed / progress.total) * 100)
       : 0;
 
+  const quotaLimit = quota?.limit;
+  const quotaHint = quotaLimit
+    ? `Mỗi lần tạo gợi ý dùng 1/${quotaLimit} lượt trong ngày.`
+    : 'Mỗi lần tạo gợi ý dùng 1 lượt trong ngày.';
+
   return (
     <Modal
       open={open}
       width={960}
       title='Gợi ý câu hỏi bằng AI'
       onCancel={handleClose}
+      afterClose={() => returnFocusRef?.current?.focus?.()}
+      focusTriggerAfterClose={false}
+      centered
+      styles={{ body: { maxHeight: 'calc(100dvh - 240px)', overflowY: 'auto' } }}
       destroyOnHidden
       footer={
-        <Flex justify='flex-end' wrap='wrap' gap={8}>
-          <Button onClick={handleClose} disabled={saving || generating}>
-            Đóng
-          </Button>
-          <Button
-            icon={<BulbOutlined />}
-            loading={generating}
-            disabled={saving}
-            onClick={handleGenerate}
-          >
-            {drafts.length > 0 ? 'Tạo lại gợi ý' : 'Tạo gợi ý'}
-          </Button>
-          <Button
-            type='primary'
-            loading={saving}
-            disabled={!canSave}
-            onClick={handleSave}
-          >
-            Thêm {selectedDrafts.length} câu đã chọn
-          </Button>
+        <Flex justify='space-between' align='center' gap={8} wrap='wrap'>
+          <Text type='secondary' style={{ fontSize: 12 }}>
+            {quotaHint}
+          </Text>
+          <Flex gap={8} wrap='wrap'>
+            <Button onClick={handleClose} disabled={saving || generating}>
+              Đóng
+            </Button>
+            {drafts.length > 0 ? (
+              <>
+                <Button
+                  icon={<BulbOutlined />}
+                  loading={generating}
+                  disabled={saving}
+                  onClick={handleGenerate}
+                >
+                  Tạo lại gợi ý
+                </Button>
+                <Button
+                  ref={primaryActionRef}
+                  type='primary'
+                  loading={saving}
+                  disabled={!canSave}
+                  onClick={handleSave}
+                >
+                  Thêm {selectedDrafts.length} câu đã chọn
+                </Button>
+              </>
+            ) : (
+              <Button
+                ref={primaryActionRef}
+                type='primary'
+                icon={<BulbOutlined />}
+                loading={generating}
+                disabled={saving}
+                onClick={handleGenerate}
+              >
+                Tạo gợi ý
+              </Button>
+            )}
+          </Flex>
         </Flex>
       }
     >

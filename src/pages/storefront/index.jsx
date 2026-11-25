@@ -48,6 +48,7 @@ import {
   validateTemplateTitle,
 } from '../../lib/templateInsert';
 import { hasSession } from '../../lib/session';
+import { snippetStatusView, themeDisplayName } from '../../lib/storefrontStatus';
 import PageHeader from '../../components/page-header';
 import LoginRequired from '../../components/login-required';
 
@@ -335,10 +336,16 @@ const Storefront = () => {
   const installed = data?.installed === true;
   const version = data?.version ?? null;
   const latestVersion = data?.latest_version ?? null;
-  const needsUpdate =
-    installed &&
-    latestVersion !== null &&
-    String(version ?? '') !== String(latestVersion);
+  const snippetView = snippetStatusView({
+    installed,
+    version,
+    latestVersion,
+    themeName: data?.theme_name,
+  });
+  const autoInsertTheme = themeDisplayName(
+    templatesQuery.data?.theme_name,
+    data?.theme_name
+  );
 
   return (
     <>
@@ -356,21 +363,21 @@ const Storefront = () => {
             />
           ) : (
             <Flex vertical gap={16}>
+              <Flex align='center' gap={8} wrap='wrap'>
+                {installed ? (
+                  <Tag color='green'>Đã cài</Tag>
+                ) : (
+                  <Tag color='red'>Chưa cài</Tag>
+                )}
+                {snippetView.needsUpdate && (
+                  <Tag color='orange'>Có bản cập nhật mới</Tag>
+                )}
+                <Text>{snippetView.sentence}</Text>
+              </Flex>
+
               <Descriptions column={1} size='small'>
-                <Descriptions.Item label='Trạng thái'>
-                  {installed ? (
-                    <Tag color='green'>Đã cài</Tag>
-                  ) : (
-                    <Tag color='red'>Chưa cài</Tag>
-                  )}
-                  {needsUpdate && (
-                    <Tag color='orange' className='ml-2'>
-                      Có bản cập nhật mới
-                    </Tag>
-                  )}
-                </Descriptions.Item>
                 <Descriptions.Item label='Theme đang xuất bản'>
-                  {data?.theme_name || 'Chưa xác định'}
+                  {themeDisplayName(data?.theme_name) || 'Chưa xác định'}
                 </Descriptions.Item>
                 <Descriptions.Item label='Phiên bản snippet'>
                   {installed ? version || 'Chưa xác định' : '—'}
@@ -382,13 +389,13 @@ const Storefront = () => {
 
               <div>
                 <Button
-                  type='primary'
+                  type={snippetView.actionType}
                   icon={<CloudUploadOutlined />}
                   loading={installSnippet.isPending}
                   disabled={!canWrite}
                   onClick={() => installSnippet.mutate()}
                 >
-                  {installed ? 'Cập nhật' : 'Cài vào theme'}
+                  {snippetView.actionLabel}
                 </Button>
               </div>
 
@@ -416,7 +423,9 @@ const Storefront = () => {
             </Paragraph>
 
             <Flex align='center' gap={8} wrap='wrap'>
-              <Text strong>{templatesQuery.data?.theme_name || 'Theme đang xuất bản'}</Text>
+              <Text strong>
+                {autoInsertTheme || (templatesQuery.isLoading ? 'Đang tải tên theme…' : 'Chưa xác định tên theme')}
+              </Text>
               {templatesQuery.data?.theme_id ? (
                 <Text type='secondary'>ID {templatesQuery.data.theme_id}</Text>
               ) : null}

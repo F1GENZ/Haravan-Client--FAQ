@@ -4,8 +4,12 @@ import {
   buildDuplicatePayload,
   buildFaqPayload,
   createFaqKey,
+  faqAnswerToSave,
+  faqEditorBaseline,
+  faqFormValues,
   groupFaqs,
   isCompliantFaqKey,
+  isFaqFormDirty,
   maxFaqPosition,
   nextFaqPosition,
   normalizePosition,
@@ -235,3 +239,92 @@ describe('toFaqEntries', () => {
     ).toBe(false);
   });
 });
+
+describe('faqFormValues', () => {
+  it('defaults a new question to Schema on', () => {
+    expect(faqFormValues(null)).toEqual({
+      schema: true,
+      categories: '',
+      question: '',
+      answer: '',
+    });
+  });
+
+  it('loads the stored fields of an existing question', () => {
+    const entry = toFaqEntry({
+      id: 1,
+      value: JSON.stringify({
+        question: 'Hỏi',
+        answer: '<p>Đáp</p>',
+        categories: 'Giao hàng',
+        schema: false,
+      }),
+    });
+    expect(faqFormValues(entry)).toEqual({
+      schema: false,
+      categories: 'Giao hàng',
+      question: 'Hỏi',
+      answer: '<p>Đáp</p>',
+    });
+  });
+});
+
+describe('isFaqFormDirty', () => {
+  const initial = faqFormValues(null);
+
+  it('is false while every value matches the snapshot', () => {
+    expect(isFaqFormDirty(initial, { ...initial })).toBe(false);
+  });
+
+  it('detects each edited field', () => {
+    expect(isFaqFormDirty(initial, { ...initial, question: 'Hỏi' })).toBe(true);
+    expect(isFaqFormDirty(initial, { ...initial, categories: 'Giao hàng' })).toBe(true);
+    expect(isFaqFormDirty(initial, { ...initial, answer: '<p>x</p>' })).toBe(true);
+    expect(isFaqFormDirty(initial, { ...initial, schema: false })).toBe(true);
+  });
+
+  it('treats a missing value as empty instead of dirty', () => {
+    expect(isFaqFormDirty(initial, {})).toBe(false);
+  });
+});
+
+describe('faqEditorBaseline', () => {
+  const stored = faqFormValues(
+    toFaqEntry({
+      id: 1,
+      value: JSON.stringify({ question: 'Hỏi', answer: 'Xin chào', categories: 'Giao hàng' }),
+    })
+  );
+
+  it('treats normalised plain-text answers as untouched', () => {
+    const normalized = '<p>Xin chào</p>';
+    const baseline = faqEditorBaseline(stored, normalized);
+    expect(baseline.answer).toBe(normalized);
+    expect(isFaqFormDirty(baseline, { ...stored, answer: normalized })).toBe(false);
+  });
+
+  it('still flags a real edit made after the editor initialised', () => {
+    const baseline = faqEditorBaseline(stored, '<p>Xin chào</p>');
+    expect(
+      isFaqFormDirty(baseline, { ...stored, answer: '<p>Xin chào</p><p>Thêm</p>' })
+    ).toBe(true);
+  });
+
+  it('keeps the other fields of the snapshot', () => {
+    const baseline = faqEditorBaseline(stored, '<p>a</p>');
+    expect(baseline.question).toBe('Hỏi');
+    expect(baseline.categories).toBe('Giao hàng');
+    expect(isFaqFormDirty(baseline, { ...baseline, question: 'Hỏi khác' })).toBe(true);
+  });
+});
+
+describe('faqAnswerToSave', () => {
+  it('sends the stored answer back untouched while the editor still holds its own rewrite', () => {
+    expect(faqAnswerToSave('<p>Một dòng</p>', '<p>Một dòng</p>', 'Một dòng')).toBe('Một dòng');
+  });
+
+  it('sends what the merchant typed once the answer moved off the baseline', () => {
+    expect(faqAnswerToSave('<p>Đã sửa</p>', '<p>Một dòng</p>', 'Một dòng')).toBe('<p>Đã sửa</p>');
+  });
+});
+

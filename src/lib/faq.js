@@ -129,3 +129,49 @@ export function buildDuplicatePayload(entry, position, key = createFaqKey()) {
     position: normalizePosition(position) ?? 1,
   };
 }
+
+/** Fields the answer dialog edits; a new question defaults to Schema on, matching the API. */
+export function faqFormValues(entry) {
+  const value = entry?.parsedValue ?? parseFaqValue(entry?.value);
+  return {
+    schema: entry ? Boolean(value.schema) : true,
+    categories: value.categories ?? "",
+    question: value.question ?? "",
+    answer: value.answer ?? "",
+  };
+}
+
+/**
+ * TinyMCE rewrites what it is given (plain text becomes `<p>`, indentation and entity
+ * encoding change), so the dialog adopts the editor's first render as the answer baseline:
+ * an untouched FAQ stays clean and closing it never asks to discard changes.
+ */
+export function faqEditorBaseline(initial, editorContent) {
+  return { ...initial, answer: String(editorContent ?? "") };
+}
+
+/**
+ * The editor's normalised first render is only a dirty-check baseline. While the answer
+ * still equals it, the merchant did not touch it, so saving must send back the stored
+ * answer byte for byte instead of the editor's rewrite.
+ */
+export function faqAnswerToSave(answer, baselineAnswer, storedAnswer) {
+  const current = String(answer ?? "");
+  if (current === String(baselineAnswer ?? "")) return String(storedAnswer ?? "");
+  return current;
+}
+
+/**
+ * Dirtiness is a value comparison, so a failed validation or a reverted edit is not a change.
+ */
+export function isFaqFormDirty(initial, values) {
+  if (String(values?.question ?? "") !== String(initial?.question ?? "")) return true;
+  if (String(values?.categories ?? "") !== String(initial?.categories ?? "")) return true;
+  if (String(values?.answer ?? "") !== String(initial?.answer ?? "")) return true;
+  // An unregistered switch reports undefined; that is not an edit.
+  return (
+    values?.schema !== undefined &&
+    Boolean(values.schema) !== Boolean(initial?.schema)
+  );
+}
+
