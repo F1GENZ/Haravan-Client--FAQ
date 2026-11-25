@@ -7,6 +7,7 @@ import {
   addPendingFaq,
   buildCreatedFaqEntry,
   forgetPendingFaq,
+  hasPendingFaq,
   mergePendingFaqs,
 } from "../lib/pendingFaqs";
 import { toResult, toResultError } from "./apiResult";
@@ -102,6 +103,10 @@ export function useFaqs({ type, objectid }) {
     retry: false,
     refetchOnWindowFocus: false,
     staleTime: 30 * 1000,
+    // Haravan lists a new metafield 60-90 s later; poll only while a row is waiting so the
+    // sync notice and the disabled actions clear without remounting the page.
+    refetchInterval: (query) =>
+      hasPendingFaq(query.state.data) ? 20 * 1000 : false,
   });
 }
 

@@ -28,6 +28,7 @@ import {
   nextFaqPosition,
 } from '../../lib/faq';
 import { faqEntryToCsvRow, serializeCsv } from '../../lib/csv';
+import { hasPendingFaq } from '../../lib/pendingFaqs';
 import PageHeader from '../../components/page-header';
 import LoginRequired from '../../components/login-required';
 import ResourceSearch from '../../components/resource-search';
@@ -95,7 +96,7 @@ const Metafields = () => {
 
   const groups = useMemo(() => groupFaqs(entries), [entries]);
   const nextPosition = useMemo(() => nextFaqPosition(entries), [entries]);
-  const hasPending = entries.some((entry) => entry.pending);
+  const hasPending = hasPendingFaq(entries);
   const targetName = resourceType === 'shop' ? '' : resourceTitle || `#${objectid}`;
 
   const openCreate = () => {

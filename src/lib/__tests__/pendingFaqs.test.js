@@ -5,6 +5,7 @@ import {
   buildCreatedFaqEntry,
   faqPendingKey,
   forgetPendingFaq,
+  hasPendingFaq,
   mergePendingFaqs,
 } from '../pendingFaqs';
 import { toFaqEntry } from '../faq';
@@ -147,5 +148,21 @@ describe('forgetPendingFaq', () => {
     forgetPendingFaq(store, { type: 'shop', objectid: '0' }, 500);
 
     expect(store.get(faqPendingKey('pages', '42'))).toHaveLength(1);
+  });
+});
+
+describe('hasPendingFaq', () => {
+  it('is true only while an entry carries the pending flag', () => {
+    const store = new Map();
+    addPendingFaq(store, owner, makeEntry(500), 1000);
+
+    expect(hasPendingFaq(mergePendingFaqs(store, owner, [makeEntry(1)], 2000))).toBe(true);
+    expect(hasPendingFaq(mergePendingFaqs(store, owner, [makeEntry(500)], 2000))).toBe(false);
+    expect(hasPendingFaq([makeEntry(1)])).toBe(false);
+  });
+
+  it('tolerates an empty or missing list', () => {
+    expect(hasPendingFaq([])).toBe(false);
+    expect(hasPendingFaq(undefined)).toBe(false);
   });
 });

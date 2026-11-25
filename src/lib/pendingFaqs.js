@@ -69,3 +69,8 @@ export function forgetPendingFaq(store, { type, objectid }, id) {
   if (kept.length > 0) store.set(key, kept);
   else store.delete(key);
 }
+
+/** True while at least one FAQ is still waiting for Haravan to list it. */
+export function hasPendingFaq(entries) {
+  return Array.isArray(entries) && entries.some((entry) => entry.pending === true);
+}
