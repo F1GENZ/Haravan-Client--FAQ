@@ -159,7 +159,7 @@ const Metafields = () => {
     return (
       <>
         {header}
-        <Card style={{ borderRadius: 12 }}>
+        <Card>
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={
@@ -179,7 +179,7 @@ const Metafields = () => {
   return (
     <>
       {header}
-      <Card style={{ borderRadius: 12 }} styles={{ body: { padding: 20 } }}>
+      <Card>
         <Flex justify='space-between' align='center' gap={12} wrap='wrap' style={{ marginBottom: 16 }}>
           <Flex align='center' gap={8} wrap='wrap' style={{ minWidth: 0 }}>
             <Text strong style={{ fontSize: 15 }}>

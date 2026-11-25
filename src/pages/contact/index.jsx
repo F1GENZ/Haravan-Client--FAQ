@@ -92,7 +92,7 @@ const Contact = () => (
     />
 
     <div style={{ display: 'grid', gap: 16, alignItems: 'start', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
-      <Card size='small' style={{ borderRadius: 12 }} styles={{ body: { padding: '8px 20px' } }}>
+      <Card size='small' styles={{ body: { padding: '8px 20px' } }}>
         <Flex align='center' gap={8} style={{ paddingTop: 8, marginBottom: 2 }}>
           <CustomerServiceOutlined style={{ color: '#1677ff', fontSize: 16 }} />
           <Text strong>Thông tin liên hệ</Text>
@@ -105,7 +105,7 @@ const Contact = () => (
         ))}
       </Card>
 
-      <Card size='small' style={{ borderRadius: 12 }} styles={{ body: { padding: '16px 20px' } }}>
+      <Card size='small' styles={{ body: { padding: '16px 20px' } }}>
         <Flex align='center' gap={8} style={{ marginBottom: 12 }}>
           <ClockCircleOutlined style={{ color: '#faad14', fontSize: 16 }} />
           <Text strong>Giờ hỗ trợ</Text>

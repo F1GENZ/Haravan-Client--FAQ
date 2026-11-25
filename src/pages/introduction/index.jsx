@@ -15,8 +15,6 @@ import PageHeader from '../../components/page-header';
 
 const { Paragraph, Text } = Typography;
 
-const CARD_STYLE = { borderRadius: 12 };
-
 const FEATURES = [
   {
     icon: <AppstoreOutlined style={{ color: '#1677ff', fontSize: 18 }} />,
@@ -71,7 +69,7 @@ const Introduction = () => (
     />
 
     <Flex vertical gap={16}>
-      <Card style={CARD_STYLE}>
+      <Card>
         <Flex align='center' gap={8} style={{ marginBottom: 8 }}>
           <RocketOutlined style={{ color: '#1677ff', fontSize: 16 }} />
           <Text strong>Tổng quan</Text>
@@ -85,7 +83,7 @@ const Introduction = () => (
 
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
         {FEATURES.map((feature) => (
-          <Card key={feature.title} size='small' style={CARD_STYLE} styles={{ body: { padding: 16 } }}>
+          <Card key={feature.title} size='small' styles={{ body: { padding: 16 } }}>
             <Flex gap={12} align='flex-start'>
               <div
                 style={{
@@ -114,7 +112,7 @@ const Introduction = () => (
         ))}
       </div>
 
-      <Card style={CARD_STYLE}>
+      <Card>
         <Text strong style={{ display: 'block', marginBottom: 12 }}>
           Lợi ích
         </Text>
