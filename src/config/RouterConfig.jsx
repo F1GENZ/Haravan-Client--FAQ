@@ -4,6 +4,7 @@ import GrandService from "../pages/auth/grandservice/index";
 import Introduction from "../pages/introduction/index";
 import Guide from "../pages/guide/index";
 import Storefront from "../pages/storefront/index";
+import Contact from "../pages/contact/index";
 
 export const routes = [
   {
@@ -47,6 +48,12 @@ export const routes = [
     layout: true,
     isPrivate: false,
     page: <Guide />,
+  },
+  {
+    path: "/contact",
+    layout: true,
+    isPrivate: false,
+    page: <Contact />,
   },
   {
     path: "*",

@@ -1,11 +1,22 @@
 import { Alert, Button, Card, Descriptions, Flex, Space, Spin, Tag, Typography, message } from 'antd';
-import { CloudUploadOutlined, CopyOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, CodeOutlined, CopyOutlined, GlobalOutlined } from '@ant-design/icons';
 import { useInstallSnippet, useSnippetStatus } from '../../common/ThemeService';
 import { toResultError } from '../../common/apiResult';
 import { useCanWrite } from '../../common/TrialService';
 import { hasSession } from '../../lib/session';
+import PageHeader from '../../components/page-header';
+import LoginRequired from '../../components/login-required';
 
-const { Title, Paragraph, Text } = Typography;
+const { Paragraph, Text } = Typography;
+
+const CARD_STYLE = { borderRadius: 12 };
+
+const cardTitle = (icon, text) => (
+  <Flex align='center' gap={8}>
+    {icon}
+    <span>{text}</span>
+  </Flex>
+);
 
 const INCLUDE_LINES = [
   {
@@ -32,19 +43,20 @@ const Storefront = () => {
     }
   };
 
+  const header = (
+    <PageHeader
+      title='Hiển thị trên website'
+      subtitle='Cài snippet F1GENZ FAQ vào theme đang xuất bản rồi chèn một dòng include vào template muốn hiển thị.'
+      crumbs={['Hiển thị trên website']}
+    />
+  );
+
   if (!hasSession()) {
     return (
-      <div className='p-6 text-center'>
-        <Title level={3} className='text-gray-500'>
-          Vui lòng đăng nhập để sử dụng tính năng này
-        </Title>
-        <Paragraph>
-          Bạn cần mở ứng dụng từ Haravan để có phiên làm việc hợp lệ.
-        </Paragraph>
-        <Button type='primary' href='/install/login'>
-          Đăng nhập
-        </Button>
-      </div>
+      <>
+        {header}
+        <LoginRequired />
+      </>
     );
   }
 
@@ -57,19 +69,10 @@ const Storefront = () => {
     String(version ?? '') !== String(latestVersion);
 
   return (
-    <div className='p-6'>
-      <Space direction='vertical' size='large' className='w-full'>
-        <div className='text-center'>
-          <Title level={2} className='text-blue-600! mb-2!'>
-            🌐 Hiển thị FAQ trên website
-          </Title>
-          <Paragraph className='text-gray-600'>
-            Cài snippet F1GENZ FAQ vào theme đang xuất bản rồi chèn một dòng include
-            vào template bạn muốn hiển thị.
-          </Paragraph>
-        </div>
-
-        <Card className='shadow-md' title='Trạng thái snippet'>
+    <>
+      {header}
+      <Space direction='vertical' size={16} className='w-full'>
+        <Card style={CARD_STYLE} title={cardTitle(<GlobalOutlined style={{ color: '#1677ff' }} />, 'Trạng thái snippet')}>
           {isLoading ? (
             <Spin />
           ) : isError ? (
@@ -128,7 +131,7 @@ const Storefront = () => {
           )}
         </Card>
 
-        <Card className='shadow-md' title='Chèn vào template'>
+        <Card style={CARD_STYLE} title={cardTitle(<CodeOutlined style={{ color: '#722ed1' }} />, 'Chèn vào template')}>
           <Paragraph>
             Dán dòng phù hợp vào template bạn muốn hiển thị FAQ (thường là{' '}
             <Text code>templates/product.liquid</Text>,{' '}
@@ -168,7 +171,7 @@ const Storefront = () => {
           />
         </Card>
       </Space>
-    </div>
+    </>
   );
 };
 
