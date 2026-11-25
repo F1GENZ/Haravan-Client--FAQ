@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { Alert, Button, Card, Collapse, Empty, Flex, Popconfirm, Space, Spin, Tag, Typography } from 'antd';
 import {
+  BulbOutlined,
   CopyOutlined,
   DownloadOutlined,
   DeleteOutlined,
@@ -35,6 +36,7 @@ import ResourceSearch from '../../components/resource-search';
 import ModalMetafields from './modal';
 import SortableFaqList from './sortable-list';
 import CsvImportModal from './csv-import';
+import AiSuggestModal from './ai-suggest';
 
 const { Text } = Typography;
 
@@ -84,6 +86,7 @@ const Metafields = () => {
   const [editing, setEditing] = useState(null);
   const [orderEntries, setOrderEntries] = useState(null);
   const [isCsvOpen, setIsCsvOpen] = useState(false);
+  const [isAiOpen, setIsAiOpen] = useState(false);
 
   const targetKey = `${resourceType}:${objectid}`;
 
@@ -92,6 +95,7 @@ const Metafields = () => {
     setEditing(null);
     setIsModalOpen(false);
     setIsCsvOpen(false);
+    setIsAiOpen(false);
   }, [targetKey]);
 
   const groups = useMemo(() => groupFaqs(entries), [entries]);
@@ -218,6 +222,9 @@ const Metafields = () => {
                 </Button>
                 <Button icon={<UploadOutlined />} onClick={() => setIsCsvOpen(true)} disabled={!canWrite}>
                   Nhập CSV
+                </Button>
+                <Button icon={<BulbOutlined />} onClick={() => setIsAiOpen(true)}>
+                  Gợi ý bằng AI
                 </Button>
                 <Button type='primary' icon={<PlusOutlined />} onClick={openCreate} disabled={!canWrite}>
                   Thêm câu hỏi mới
@@ -358,6 +365,16 @@ const Metafields = () => {
       <CsvImportModal
         open={isCsvOpen}
         onClose={() => setIsCsvOpen(false)}
+        type={resourceType}
+        objectid={objectid || '0'}
+        entries={entries}
+        canWrite={canWrite}
+      />
+
+      <AiSuggestModal
+        key={targetKey}
+        open={isAiOpen}
+        onClose={() => setIsAiOpen(false)}
         type={resourceType}
         objectid={objectid || '0'}
         entries={entries}
