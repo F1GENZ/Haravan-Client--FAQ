@@ -61,6 +61,12 @@ import {
   schemaUpdatePayload,
 } from '../../lib/faqList';
 import { faqEntryToCsvRow, serializeCsv } from '../../lib/csv';
+import {
+  isBulkLocked,
+  releaseBulkLock,
+  tryAcquireBulkLock,
+  useBulkLocked,
+} from '../../lib/bulkLock';
 import { hasPendingFaq } from '../../lib/pendingFaqs';
 import PageHeader from '../../components/page-header';
 import LoginRequired from '../../components/login-required';
@@ -132,10 +138,9 @@ const Metafields = () => {
   const [category, setCategory] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulk, setBulk] = useState(EMPTY_BULK);
-  // One lock for the whole bulk run: handlers read the ref (state is a render behind) and
-  // every write entry point is disabled from the state.
-  const [busy, setBusy] = useState(false);
-  const busyRef = useRef(false);
+  // One module-level lock for the whole bulk run (it survives a remount of this page);
+  // every write entry point is disabled from it and re-checks it when it fires.
+  const busy = useBulkLocked();
   const latestEntriesRef = useRef(entries);
   const aiButtonRef = useRef(null);
 
@@ -199,19 +204,19 @@ const Metafields = () => {
     : null;
 
   const openCreate = () => {
-    if (busyRef.current) return;
+    if (isBulkLocked()) return;
     setEditing(null);
     setIsModalOpen(true);
   };
 
   const openEdit = (entry) => {
-    if (busyRef.current) return;
+    if (isBulkLocked()) return;
     setEditing(entry);
     setIsModalOpen(true);
   };
 
   const handleDuplicate = (entry) => {
-    if (busyRef.current) return;
+    if (isBulkLocked()) return;
     const payload = buildDuplicatePayload(
       { ...entry, type: resourceType, objectid },
       nextPosition
@@ -229,7 +234,7 @@ const Metafields = () => {
   };
 
   const handleSaveOrder = () => {
-    if (!orderEntries) return;
+    if (!orderEntries || isBulkLocked()) return;
     reorderFaqMutation.mutate(
       {
         type: resourceType,
@@ -241,7 +246,7 @@ const Metafields = () => {
   };
 
   const openSortMode = () => {
-    if (busyRef.current) return;
+    if (isBulkLocked()) return;
     setSelectedIds([]);
     setBulk(EMPTY_BULK);
     setOrderEntries(entries);
@@ -259,7 +264,7 @@ const Metafields = () => {
   };
 
   const runBulk = async (action) => {
-    if (!canWrite || busyRef.current) return;
+    if (!canWrite || isBulkLocked()) return;
     const plan = planBulkAction(action, entries, selectedIds);
     if (plan.runnable.length === 0) {
       setBulk({
@@ -276,8 +281,7 @@ const Metafields = () => {
     let skipped = plan.skipped.length;
     let stopped = false;
 
-    busyRef.current = true;
-    setBusy(true);
+    if (!tryAcquireBulkLock()) return;
     setBulk({ ...EMPTY_BULK, action, total: plan.runnable.length });
 
     try {
@@ -330,8 +334,7 @@ const Metafields = () => {
         if (stopped) break;
       }
     } finally {
-      busyRef.current = false;
-      setBusy(false);
+      releaseBulkLock();
 
       if (action === BULK_ACTIONS.delete && succeeded.length > 0) {
         const removed = new Set(succeeded);
@@ -745,9 +748,10 @@ const Metafields = () => {
                           <Popconfirm
                             title='Xóa câu hỏi'
                             description='Bạn có chắc muốn xóa câu hỏi này không?'
-                            onConfirm={() =>
-                              deleteFaqMutation.mutate({ type: resourceType, objectid, metafieldid: item.id })
-                            }
+                            onConfirm={() => {
+                              if (isBulkLocked()) return;
+                              deleteFaqMutation.mutate({ type: resourceType, objectid, metafieldid: item.id });
+                            }}
                             okText='Có'
                             cancelText='Không'
                             disabled={!canWrite || item.pending || busy}

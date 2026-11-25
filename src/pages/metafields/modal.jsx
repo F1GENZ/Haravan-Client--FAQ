@@ -3,6 +3,7 @@ import { AutoComplete, Button, Flex, Form, Input, Modal, Spin, Switch } from 'an
 import { useCreateFaq, useUpdateFaq } from '../../common/MetafieldsServices';
 import {
   buildFaqPayload,
+  faqAnswerToSave,
   createFaqKey,
   faqEditorBaseline,
   faqFormValues,
@@ -38,6 +39,7 @@ const ModalMetafields = ({
   const [editorState, setEditorState] = useState({ ready: false, seed: '' });
   const editorBootstrappedRef = useRef(false);
   const initialValuesRef = useRef(null);
+  const storedAnswerRef = useRef('');
   if (initialValuesRef.current === null) initialValuesRef.current = faqFormValues(null);
   const compact = useCompactViewport();
   const editorMode = compact ? 'compact' : 'wide';
@@ -63,6 +65,7 @@ const ModalMetafields = ({
     if (!open) return;
     const initial = faqFormValues(editing);
     initialValuesRef.current = initial;
+    storedAnswerRef.current = initial.answer;
     form.setFieldsValue(initial);
     setDirty(false);
     editorBootstrappedRef.current = false;
@@ -115,7 +118,11 @@ const ModalMetafields = ({
           ? editing.key
           : createFaqKey(),
       question: values.question,
-      answer: values.answer ?? '',
+      answer: faqAnswerToSave(
+        values.answer,
+        initialValuesRef.current.answer,
+        storedAnswerRef.current
+      ),
       categories: values.categories,
       schema: values.schema,
       position: isEditing ? editing.position : nextPosition,

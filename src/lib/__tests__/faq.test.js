@@ -4,6 +4,7 @@ import {
   buildDuplicatePayload,
   buildFaqPayload,
   createFaqKey,
+  faqAnswerToSave,
   faqEditorBaseline,
   faqFormValues,
   groupFaqs,
@@ -314,6 +315,16 @@ describe('faqEditorBaseline', () => {
     expect(baseline.question).toBe('Hỏi');
     expect(baseline.categories).toBe('Giao hàng');
     expect(isFaqFormDirty(baseline, { ...baseline, question: 'Hỏi khác' })).toBe(true);
+  });
+});
+
+describe('faqAnswerToSave', () => {
+  it('sends the stored answer back untouched while the editor still holds its own rewrite', () => {
+    expect(faqAnswerToSave('<p>Một dòng</p>', '<p>Một dòng</p>', 'Một dòng')).toBe('Một dòng');
+  });
+
+  it('sends what the merchant typed once the answer moved off the baseline', () => {
+    expect(faqAnswerToSave('<p>Đã sửa</p>', '<p>Một dòng</p>', 'Một dòng')).toBe('<p>Đã sửa</p>');
   });
 });
 

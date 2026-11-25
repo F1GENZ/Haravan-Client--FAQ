@@ -151,6 +151,17 @@ export function faqEditorBaseline(initial, editorContent) {
 }
 
 /**
+ * The editor's normalised first render is only a dirty-check baseline. While the answer
+ * still equals it, the merchant did not touch it, so saving must send back the stored
+ * answer byte for byte instead of the editor's rewrite.
+ */
+export function faqAnswerToSave(answer, baselineAnswer, storedAnswer) {
+  const current = String(answer ?? "");
+  if (current === String(baselineAnswer ?? "")) return String(storedAnswer ?? "");
+  return current;
+}
+
+/**
  * Dirtiness is a value comparison, so a failed validation or a reverted edit is not a change.
  */
 export function isFaqFormDirty(initial, values) {
