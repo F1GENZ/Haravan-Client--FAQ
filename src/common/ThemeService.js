@@ -15,6 +15,8 @@ function invalidateThemeWriteQueries(queryClient) {
 function useThemeWriteErrorHandler(fallback) {
   const queryClient = useQueryClient();
   return (error) => {
+    // A write can fail after some templates were already modified; refetch the real state.
+    invalidateThemeWriteQueries(queryClient);
     const result = toResultError(error);
     if (result.status === 402) {
       queryClient.invalidateQueries({ queryKey: ["trial"] });

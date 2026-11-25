@@ -36,6 +36,7 @@ import {
 import { toResultError } from '../../common/apiResult';
 import { useCanWrite } from '../../common/TrialService';
 import {
+  MAX_TEMPLATE_KEYS,
   MAX_TEMPLATE_TITLE_LENGTH,
   defaultSelectedKeys,
   describeInsertResults,
@@ -114,7 +115,19 @@ const Storefront = () => {
     selectedKeys.length === 0 ||
     insertTemplates.isPending;
 
+  const applySelection = (nextKeys) => {
+    if (nextKeys.length > MAX_TEMPLATE_KEYS) {
+      message.warning(`Chỉ chèn được tối đa ${MAX_TEMPLATE_KEYS} template mỗi lần.`);
+      return;
+    }
+    setSelectedRowKeys(nextKeys);
+  };
+
   const handleInsert = () => {
+    if (selectedKeys.length > MAX_TEMPLATE_KEYS) {
+      message.warning(`Chỉ chèn được tối đa ${MAX_TEMPLATE_KEYS} template mỗi lần.`);
+      return;
+    }
     insertTemplates.mutate(
       { keys: selectedKeys, title: titleCheck.value || undefined },
       {
@@ -157,7 +170,7 @@ const Storefront = () => {
     const next = new Set(selectedKeys);
     if (checked) next.add(key);
     else next.delete(key);
-    setSelectedRowKeys([...next]);
+    applySelection([...next]);
   };
 
   const renderStatus = (record) => {
@@ -294,7 +307,7 @@ const Storefront = () => {
       pagination={false}
       rowSelection={{
         selectedRowKeys: selectedKeys,
-        onChange: (keys) => setSelectedRowKeys(keys),
+        onChange: (keys) => applySelection(keys),
         getCheckboxProps: (record) => ({
           disabled: !canWrite || !isSelectableTemplate(record),
         }),
@@ -436,6 +449,14 @@ const Storefront = () => {
                   : titleCheck.error}
               </Text>
             </Flex>
+
+            {templatesQuery.data?.incomplete ? (
+              <Alert
+                type='warning'
+                showIcon
+                message='Một số template chưa đọc được từ Haravan. Tải lại trang sau ít phút để xem đủ danh sách.'
+              />
+            ) : null}
 
             {templateList}
 
