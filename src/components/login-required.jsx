@@ -2,7 +2,7 @@ import { Button, Card, Result } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
 
 const LoginRequired = () => (
-  <Card style={{ borderRadius: 12 }}>
+  <Card>
     <Result
       icon={<LockOutlined style={{ color: '#1677ff' }} />}
       title='Vui lòng đăng nhập để sử dụng tính năng này'

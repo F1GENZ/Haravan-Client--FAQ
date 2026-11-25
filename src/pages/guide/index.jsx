@@ -13,10 +13,8 @@ import PageHeader from '../../components/page-header';
 
 const { Paragraph, Text } = Typography;
 
-const CARD_STYLE = { borderRadius: 12 };
-
 const Section = ({ icon, color, title, children }) => (
-  <Card style={CARD_STYLE}>
+  <Card>
     <Flex align='center' gap={10} style={{ marginBottom: 14 }}>
       <div
         style={{

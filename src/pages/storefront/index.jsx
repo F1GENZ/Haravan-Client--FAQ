@@ -9,8 +9,6 @@ import LoginRequired from '../../components/login-required';
 
 const { Paragraph, Text } = Typography;
 
-const CARD_STYLE = { borderRadius: 12 };
-
 const cardTitle = (icon, text) => (
   <Flex align='center' gap={8}>
     {icon}
@@ -72,7 +70,7 @@ const Storefront = () => {
     <>
       {header}
       <Space direction='vertical' size={16} className='w-full'>
-        <Card style={CARD_STYLE} title={cardTitle(<GlobalOutlined style={{ color: '#1677ff' }} />, 'Trạng thái snippet')}>
+        <Card title={cardTitle(<GlobalOutlined style={{ color: '#1677ff' }} />, 'Trạng thái snippet')}>
           {isLoading ? (
             <Spin />
           ) : isError ? (
@@ -131,7 +129,7 @@ const Storefront = () => {
           )}
         </Card>
 
-        <Card style={CARD_STYLE} title={cardTitle(<CodeOutlined style={{ color: '#722ed1' }} />, 'Chèn vào template')}>
+        <Card title={cardTitle(<CodeOutlined style={{ color: '#722ed1' }} />, 'Chèn vào template')}>
           <Paragraph>
             Dán dòng phù hợp vào template bạn muốn hiển thị FAQ (thường là{' '}
             <Text code>templates/product.liquid</Text>,{' '}
