@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { AutoComplete, Button, Divider, Form, Input, Modal, Switch, Typography } from 'antd';
+import { AutoComplete, Button, Form, Input, Modal, Space, Switch } from 'antd';
 import TinyEditor from '../../components/editor';
 import { useCreateFaq, useUpdateFaq } from '../../common/MetafieldsServices';
 import { buildFaqPayload, createFaqKey, isCompliantFaqKey } from '../../lib/faq';
@@ -69,18 +69,13 @@ const ModalMetafields = ({
 
   return (
     <Modal
-      width={'75vw'}
-      title={
-        <Typography.Title className='text-center uppercase' level={4}>
-          {isEditing ? 'Chỉnh sửa câu hỏi' : 'Thêm câu hỏi mới'}
-        </Typography.Title>
-      }
+      width={960}
+      title={isEditing ? 'Chỉnh sửa câu hỏi' : 'Thêm câu hỏi mới'}
       open={open}
       onCancel={onClose}
       destroyOnHidden
-      footer={[]}
+      footer={null}
     >
-      <Divider />
       <Form
         form={form}
         layout='vertical'
@@ -89,14 +84,14 @@ const ModalMetafields = ({
       >
         <Form.Item
           name='schema'
-          label={<b>Nội dung này sẽ được Google đọc dưới dạng Schema</b>}
+          label='Cho Google đọc câu hỏi này qua Schema Markup (JSON-LD FAQPage)'
           layout='horizontal'
           valuePropName='checked'
         >
           <Switch className='float-right' />
         </Form.Item>
         <Form.Item
-          label='❓Câu hỏi'
+          label='Câu hỏi'
           name='question'
           rules={[
             { required: true, message: 'Vui lòng nhập nội dung câu hỏi!' },
@@ -107,7 +102,7 @@ const ModalMetafields = ({
           <Input placeholder='Nhập câu hỏi...' required />
         </Form.Item>
         <Form.Item
-          label='🔑 Phân loại câu hỏi'
+          label='Phân loại câu hỏi'
           name='categories'
           rules={[
             { required: true, message: 'Vui lòng nhập phân loại câu hỏi!' },
@@ -143,7 +138,7 @@ const ModalMetafields = ({
             }
           />
         </Form.Item>
-        <Form.Item label='✅ Câu trả lời' name='answer'>
+        <Form.Item label='Câu trả lời' name='answer'>
           <TinyEditor
             key={editing?.id ?? 'new'}
             initialValue={editing?.parsedValue?.answer ?? ''}
@@ -151,14 +146,17 @@ const ModalMetafields = ({
           />
         </Form.Item>
         <Form.Item className='text-right mb-0!'>
-          <Button
-            htmlType='submit'
-            type='primary'
-            loading={submitting}
-            disabled={!canWrite}
-          >
-            Lưu
-          </Button>
+          <Space>
+            <Button onClick={onClose}>Hủy</Button>
+            <Button
+              htmlType='submit'
+              type='primary'
+              loading={submitting}
+              disabled={!canWrite}
+            >
+              Lưu
+            </Button>
+          </Space>
         </Form.Item>
       </Form>
     </Modal>

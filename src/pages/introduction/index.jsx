@@ -1,137 +1,138 @@
-import { Typography, Card, Space, Divider } from 'antd';
-import { InfoCircleOutlined, TeamOutlined, RocketOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Card, Flex, Typography } from 'antd';
+import {
+  AppstoreOutlined,
+  CheckCircleFilled,
+  CloudUploadOutlined,
+  EditOutlined,
+  FileExcelOutlined,
+  OrderedListOutlined,
+  RocketOutlined,
+  SearchOutlined,
+  StarOutlined,
+} from '@ant-design/icons';
+import { Link } from 'react-router-dom';
+import PageHeader from '../../components/page-header';
 
-const { Title, Paragraph } = Typography;
+const { Paragraph, Text } = Typography;
 
-const Introduction = () => {
-  return (
-    <div className='p-6'>
-      <Space direction="vertical" size="large" className='w-full'>
-        <div className='text-center mb-6'>
-          <Title level={1} className='text-red-600! mb-2!'>
-            <InfoCircleOutlined className='mr-2' />
-            Giới thiệu về F1GENZ FAQ
-          </Title>
-          <Paragraph className='text-lg text-gray-600'>
-            Hệ thống quản lý Câu hỏi thường gặp (FAQ) chuyên nghiệp cho cửa hàng Haravan
-          </Paragraph>
-        </div>
+const CARD_STYLE = { borderRadius: 12 };
 
-        <Divider />
+const FEATURES = [
+  {
+    icon: <AppstoreOutlined style={{ color: '#1677ff', fontSize: 18 }} />,
+    title: 'Bốn phạm vi câu hỏi',
+    text: 'Mỗi shop, sản phẩm, danh mục và trang nội dung có bộ câu hỏi riêng; snippet tự chọn đúng bộ theo template đang hiển thị.',
+  },
+  {
+    icon: <EditOutlined style={{ color: '#13c2c2', fontSize: 18 }} />,
+    title: 'Trình soạn thảo đầy đủ',
+    text: 'Soạn câu trả lời với định dạng chữ, liên kết, danh sách, bảng và hình ảnh; phân loại câu hỏi theo chủ đề có gợi ý sẵn.',
+  },
+  {
+    icon: <StarOutlined style={{ color: '#faad14', fontSize: 18 }} />,
+    title: 'Schema Markup cho SEO',
+    text: 'Câu hỏi bật Schema Markup được đưa vào JSON-LD FAQPage để Google đọc và hiển thị dạng rich result.',
+  },
+  {
+    icon: <OrderedListOutlined style={{ color: '#722ed1', fontSize: 18 }} />,
+    title: 'Sắp xếp bằng kéo thả',
+    text: 'Đổi thứ tự hiển thị bằng kéo thả; website hiển thị đúng thứ tự đã lưu, kể cả sau khi xóa bớt câu hỏi.',
+  },
+  {
+    icon: <FileExcelOutlined style={{ color: '#52c41a', fontSize: 18 }} />,
+    title: 'Nhân bản, xuất và nhập CSV',
+    text: 'Nhân bản một câu hỏi trong một cú bấm, xuất toàn bộ ra CSV rồi nhập sang sản phẩm hoặc danh mục khác.',
+  },
+  {
+    icon: <CloudUploadOutlined style={{ color: '#eb2f96', fontSize: 18 }} />,
+    title: 'Cài lên website một chạm',
+    text: 'Ứng dụng tự ghi snippet vào theme đang xuất bản; FAQ hiển thị dạng mở rộng/thu gọn, không cần JavaScript.',
+  },
+  {
+    icon: <SearchOutlined style={{ color: '#2f54eb', fontSize: 18 }} />,
+    title: 'Tìm nhanh sản phẩm, danh mục, trang',
+    text: 'Gõ vài ký tự để tìm và mở ngay trang quản lý câu hỏi của sản phẩm, danh mục hoặc trang cần sửa.',
+  },
+];
 
-        <Card className='shadow-md'>
-          <Title level={2} className='text-blue-600! mb-4!'>
-            <RocketOutlined className='mr-2' />
-            Tổng quan
-          </Title>
-          <Paragraph className='text-base leading-relaxed'>
-            <strong>F1GENZ FAQ</strong> là một ứng dụng mạnh mẽ được thiết kế đặc biệt để giúp các chủ cửa hàng trên nền tảng Haravan 
-            quản lý và hiển thị các câu hỏi thường gặp một cách hiệu quả. Với giao diện thân thiện và dễ sử dụng, bạn có thể dễ dàng 
-            tạo, chỉnh sửa và quản lý các FAQ cho cửa hàng của mình.
-          </Paragraph>
-        </Card>
+const BENEFITS = [
+  'Giảm câu hỏi lặp lại gửi tới đội chăm sóc khách hàng.',
+  'Khách hàng tự tìm được câu trả lời ngay trên trang sản phẩm.',
+  'Tăng khả năng xuất hiện nổi bật trên Google nhờ dữ liệu có cấu trúc.',
+  'Quản lý tập trung mọi FAQ của cửa hàng ở một nơi.',
+];
 
-        <Card className='shadow-md'>
-          <Title level={2} className='text-green-600! mb-4!'>
-            <CheckCircleOutlined className='mr-2' />
-            Tính năng chính
-          </Title>
-          <Space direction="vertical" size="middle" className='w-full'>
-            <div>
-              <Title level={4} className='mb-2!'>📝 Quản lý FAQ dễ dàng</Title>
-              <Paragraph>
-                Tạo, chỉnh sửa và xóa các câu hỏi thường gặp một cách nhanh chóng và thuận tiện. 
-                Giao diện trực quan giúp bạn quản lý nội dung một cách hiệu quả.
-              </Paragraph>
-            </div>
-            <div>
-              <Title level={4} className='mb-2!'>🎨 Trình soạn thảo phong phú</Title>
-              <Paragraph>
-                Sử dụng trình soạn thảo TinyMCE với đầy đủ các công cụ định dạng văn bản, 
-                giúp bạn tạo ra những câu trả lời đẹp mắt và chuyên nghiệp.
-              </Paragraph>
-            </div>
-            <div>
-              <Title level={4} className='mb-2!'>🔍 Schema Markup hỗ trợ SEO</Title>
-              <Paragraph>
-                Tích hợp Schema Markup tự động để tối ưu hóa SEO, giúp các câu hỏi của bạn 
-                xuất hiện trong kết quả tìm kiếm của Google một cách nổi bật.
-              </Paragraph>
-            </div>
-            <div>
-              <Title level={4} className='mb-2!'>🔍 Tìm kiếm sản phẩm thông minh</Title>
-              <Paragraph>
-                Thanh tìm kiếm thông minh giúp bạn nhanh chóng tìm và quản lý FAQ cho từng sản phẩm cụ thể. 
-                Chỉ cần nhập tên sản phẩm, hệ thống sẽ tự động gợi ý và điều hướng đến trang quản lý FAQ của sản phẩm đó.
-              </Paragraph>
-            </div>
-            <div>
-              <Title level={4} className='mb-2!'>📁 Phân loại câu hỏi theo chủ đề</Title>
-              <Paragraph>
-                Tổ chức các câu hỏi theo từng phân loại (category) để dễ dàng quản lý và tìm kiếm. 
-                Hệ thống tự động gợi ý các phân loại đã có sẵn để tránh nhập trùng lặp.
-              </Paragraph>
-            </div>
-            <div>
-              <Title level={4} className='mb-2!'>🔗 Tích hợp Haravan</Title>
-              <Paragraph>
-                Kết nối trực tiếp với cửa hàng Haravan của bạn, đồng bộ dữ liệu tự động và 
-                quản lý FAQ cho từng sản phẩm, collection hoặc shop một cách dễ dàng.
-              </Paragraph>
-            </div>
-            <div>
-              <Title level={4} className='mb-2!'>📱 Giao diện responsive</Title>
-              <Paragraph>
-                Thiết kế đáp ứng mọi thiết bị, từ máy tính để bàn đến điện thoại di động, 
-                đảm bảo trải nghiệm tốt nhất cho người dùng.
-              </Paragraph>
-            </div>
-          </Space>
-        </Card>
+const Introduction = () => (
+  <>
+    <PageHeader
+      title='Giới thiệu F1GENZ FAQ'
+      subtitle='Quản lý và hiển thị câu hỏi thường gặp cho cửa hàng Haravan.'
+      crumbs={['Giới thiệu']}
+    />
 
-        <Card className='shadow-md'>
-          <Title level={2} className='text-purple-600! mb-4!'>
-            <TeamOutlined className='mr-2' />
-            Lợi ích khi sử dụng
-          </Title>
-          <Space direction="vertical" size="small" className='w-full'>
-            <Paragraph className='mb-2!'>
-              ✅ <strong>Tiết kiệm thời gian:</strong> Giảm thiểu số lượng câu hỏi lặp lại từ khách hàng
-            </Paragraph>
-            <Paragraph className='mb-2!'>
-              ✅ <strong>Tăng trải nghiệm khách hàng:</strong> Khách hàng có thể tự tìm câu trả lời nhanh chóng
-            </Paragraph>
-            <Paragraph className='mb-2!'>
-              ✅ <strong>Cải thiện SEO:</strong> Schema Markup giúp website của bạn xuất hiện nhiều hơn trên Google
-            </Paragraph>
-            <Paragraph className='mb-2!'>
-              ✅ <strong>Quản lý tập trung:</strong> Tất cả FAQ được quản lý tại một nơi duy nhất
-            </Paragraph>
-            <Paragraph className='mb-2!'>
-              ✅ <strong>Dễ dàng cập nhật:</strong> Chỉnh sửa và cập nhật nội dung FAQ bất cứ lúc nào
-            </Paragraph>
-            <Paragraph className='mb-2!'>
-              ✅ <strong>Tổ chức theo sản phẩm:</strong> Quản lý FAQ riêng biệt cho từng sản phẩm, giúp khách hàng tìm thông tin chính xác hơn
-            </Paragraph>
-            <Paragraph className='mb-2!'>
-              ✅ <strong>Tìm kiếm nhanh chóng:</strong> Tìm kiếm sản phẩm và điều hướng đến trang FAQ chỉ trong vài giây
-            </Paragraph>
-          </Space>
-        </Card>
+    <Flex vertical gap={16}>
+      <Card style={CARD_STYLE}>
+        <Flex align='center' gap={8} style={{ marginBottom: 8 }}>
+          <RocketOutlined style={{ color: '#1677ff', fontSize: 16 }} />
+          <Text strong>Tổng quan</Text>
+        </Flex>
+        <Paragraph style={{ margin: 0 }}>
+          <Text strong>F1GENZ FAQ</Text> giúp chủ cửa hàng Haravan soạn, sắp xếp và hiển thị câu hỏi thường gặp
+          cho toàn shop hoặc cho từng sản phẩm, danh mục, trang nội dung. Dữ liệu lưu trong metafield của chính
+          cửa hàng, nên website đọc trực tiếp mà không phụ thuộc máy chủ bên ngoài.
+        </Paragraph>
+      </Card>
 
-        <Card className='shadow-md bg-gradient-to-r from-blue-50 to-purple-50'>
-          <Title level={3} className='text-center mb-4!'>
-            🚀 Bắt đầu ngay hôm nay!
-          </Title>
-          <Paragraph className='text-center text-base'>
-            Hãy khám phá các tính năng của F1GENZ FAQ và tạo ra những FAQ chuyên nghiệp cho cửa hàng của bạn. 
-            Nếu bạn cần hỗ trợ, vui lòng xem phần <strong>Hướng dẫn sử dụng</strong> hoặc liên hệ với đội ngũ của chúng tôi.
-          </Paragraph>
-        </Card>
-      </Space>
-    </div>
-  );
-};
+      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+        {FEATURES.map((feature) => (
+          <Card key={feature.title} size='small' style={CARD_STYLE} styles={{ body: { padding: 16 } }}>
+            <Flex gap={12} align='flex-start'>
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: '#f6f8fa',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                {feature.icon}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                  {feature.title}
+                </Text>
+                <Text type='secondary' style={{ fontSize: 13, lineHeight: 1.6 }}>
+                  {feature.text}
+                </Text>
+              </div>
+            </Flex>
+          </Card>
+        ))}
+      </div>
+
+      <Card style={CARD_STYLE}>
+        <Text strong style={{ display: 'block', marginBottom: 12 }}>
+          Lợi ích
+        </Text>
+        <Flex vertical gap={8}>
+          {BENEFITS.map((benefit) => (
+            <Flex key={benefit} gap={8} align='flex-start'>
+              <CheckCircleFilled style={{ color: '#52c41a', marginTop: 4 }} />
+              <Text>{benefit}</Text>
+            </Flex>
+          ))}
+        </Flex>
+        <Paragraph type='secondary' style={{ margin: '16px 0 0' }}>
+          Bắt đầu với <Link to='/guide'>Hướng dẫn</Link> hoặc gửi câu hỏi cho đội F1GENZ ở mục{' '}
+          <Link to='/contact'>Liên hệ</Link>.
+        </Paragraph>
+      </Card>
+    </Flex>
+  </>
+);
 
 export default Introduction;
-
