@@ -60,7 +60,7 @@
   color: rgba(255, 255, 255, 0.72);
 }
 
-.f1g-admin-menu.ant-menu-dark .ant-menu-item:hover {
+.f1g-admin-menu.ant-menu-dark .ant-menu-item:not(.ant-menu-item-selected):hover {
   background: rgba(255, 255, 255, 0.10) !important;
   color: #fff;
 }
