@@ -38,11 +38,14 @@ describe('validateTemplateTitle', () => {
     expect(result.error).toContain(String(MAX_TEMPLATE_TITLE_LENGTH));
   });
 
-  it.each(['{', '}', '%', '\n', '\r'])('rejects the forbidden character %j', (char) => {
-    const result = validateTemplateTitle(`Tiêu đề${char}x`);
-    expect(result.ok).toBe(false);
-    expect(result.error).toContain('không được chứa');
-  });
+  it.each(['{', '}', '%', '\\', '\n', '\r'])(
+    'rejects the forbidden character %j',
+    (char) => {
+      const result = validateTemplateTitle(`Tiêu đề${char}x`);
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain('không được chứa');
+    }
+  );
 
   it('accepts exactly the maximum length', () => {
     expect(validateTemplateTitle('a'.repeat(MAX_TEMPLATE_TITLE_LENGTH)).ok).toBe(true);
@@ -187,6 +190,24 @@ describe('describeInsertResults', () => {
     ]);
   });
 
+  it('counts failed templates separately and lists their reasons', () => {
+    const described = describeInsertResults([
+      { key: 'templates/product.liquid', status: 'inserted' },
+      { key: 'templates/collection.liquid', status: 'skipped', reason: 'Đã có FAQ' },
+      { key: 'templates/page.liquid', status: 'failed', reason: 'Không đọc được template' },
+      { key: 'templates/index.liquid', status: 'failed' },
+    ]);
+    expect(described.type).toBe('error');
+    expect(described.summary).toBe(
+      'Đã chèn FAQ vào 1 template, bỏ qua 1 template, 2 template lỗi.'
+    );
+    expect(described.details).toEqual([
+      'templates/collection.liquid: Đã có FAQ',
+      'templates/page.liquid: Không đọc được template',
+      'templates/index.liquid: Lỗi không xác định.',
+    ]);
+  });
+
   it('reports info when everything was skipped', () => {
     const described = describeInsertResults([
       { key: 'templates/page.liquid', status: 'skipped', reason: 'Đã có FAQ' },
@@ -225,6 +246,22 @@ describe('describeRemoveResults', () => {
     );
     expect(described.details).toEqual([
       'templates/collection.liquid: có include dán tay, cần gỡ thủ công.',
+    ]);
+  });
+
+  it('counts failed removals separately and lists their reasons', () => {
+    const described = describeRemoveResults([
+      { key: 'templates/product.liquid', status: 'removed' },
+      { key: 'templates/collection.liquid', status: 'manual' },
+      { key: 'templates/page.liquid', status: 'failed', reason: 'Không ghi được template' },
+    ]);
+    expect(described.type).toBe('error');
+    expect(described.summary).toBe(
+      'Đã gỡ FAQ khỏi 1 template, 1 template có include dán tay cần gỡ thủ công, 1 template lỗi.'
+    );
+    expect(described.details).toEqual([
+      'templates/collection.liquid: có include dán tay, cần gỡ thủ công.',
+      'templates/page.liquid: Không ghi được template',
     ]);
   });
 

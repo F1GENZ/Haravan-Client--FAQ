@@ -1,4 +1,5 @@
 export const MAX_TEMPLATE_TITLE_LENGTH = 80;
+export const MAX_TEMPLATE_KEYS = 20;
 
 export const RESOURCE_LABELS = {
   product: 'Sản phẩm',
@@ -22,8 +23,8 @@ export const DEFAULT_BASE_TEMPLATE_KEYS = [
   'templates/page.liquid',
 ];
 
-// The title becomes a Liquid string literal; braces, % and newlines would break it.
-const FORBIDDEN_TITLE_PATTERN = /[{}%\r\n]/;
+// The title becomes a Liquid string literal; braces, %, backslashes and newlines would break it.
+const FORBIDDEN_TITLE_PATTERN = /[{}%\\\r\n]/;
 
 export function resourceLabel(resource) {
   return RESOURCE_LABELS[resource] ?? resource ?? '';
@@ -86,7 +87,7 @@ export function validateTemplateTitle(raw) {
     return {
       ok: false,
       value,
-      error: 'Tiêu đề không được chứa { } % hoặc xuống dòng.',
+      error: 'Tiêu đề không được chứa { } % \\ hoặc xuống dòng.',
     };
   }
   return { ok: true, value, error: null };
@@ -96,19 +97,32 @@ export function describeInsertResults(results) {
   const list = Array.isArray(results) ? results : [];
   const inserted = list.filter((item) => item?.status === 'inserted').length;
   const skipped = list.filter((item) => item?.status === 'skipped');
+  const failed = list.filter((item) => item?.status === 'failed');
 
   const parts = [];
   if (inserted) parts.push(`Đã chèn FAQ vào ${inserted} template`);
   if (skipped.length) parts.push(`bỏ qua ${skipped.length} template`);
+  if (failed.length) parts.push(`${failed.length} template lỗi`);
 
   return {
-    type: inserted === 0 ? 'info' : skipped.length ? 'warning' : 'success',
+    type: failed.length
+      ? 'error'
+      : inserted
+        ? skipped.length
+          ? 'warning'
+          : 'success'
+        : 'info',
     summary: parts.length
       ? `${parts.join(', ')}.`
       : 'Không có template nào được chèn.',
-    details: skipped.map(
-      (item) => `${item.key}: ${item.reason || 'Không chèn được template này.'}`
-    ),
+    details: [
+      ...skipped.map(
+        (item) => `${item.key}: ${item.reason || 'Không chèn được template này.'}`
+      ),
+      ...failed.map(
+        (item) => `${item.key}: ${item.reason || 'Lỗi không xác định.'}`
+      ),
+    ],
   };
 }
 
@@ -117,6 +131,7 @@ export function describeRemoveResults(results) {
   const removed = list.filter((item) => item?.status === 'removed').length;
   const manual = list.filter((item) => item?.status === 'manual');
   const missing = list.filter((item) => item?.status === 'not_found').length;
+  const failed = list.filter((item) => item?.status === 'failed');
 
   const parts = [];
   if (removed) parts.push(`Đã gỡ FAQ khỏi ${removed} template`);
@@ -124,14 +139,26 @@ export function describeRemoveResults(results) {
   if (manual.length) {
     parts.push(`${manual.length} template có include dán tay cần gỡ thủ công`);
   }
+  if (failed.length) parts.push(`${failed.length} template lỗi`);
 
   return {
-    type: manual.length ? 'warning' : removed ? 'success' : 'info',
+    type: failed.length
+      ? 'error'
+      : manual.length
+        ? 'warning'
+        : removed
+          ? 'success'
+          : 'info',
     summary: parts.length
       ? `${parts.join(', ')}.`
       : 'Không có template nào được gỡ.',
-    details: manual.map(
-      (item) => `${item.key}: có include dán tay, cần gỡ thủ công.`
-    ),
+    details: [
+      ...manual.map(
+        (item) => `${item.key}: có include dán tay, cần gỡ thủ công.`
+      ),
+      ...failed.map(
+        (item) => `${item.key}: ${item.reason || 'Lỗi không xác định.'}`
+      ),
+    ],
   };
 }
