@@ -129,3 +129,27 @@ export function buildDuplicatePayload(entry, position, key = createFaqKey()) {
     position: normalizePosition(position) ?? 1,
   };
 }
+
+/** Fields the answer dialog edits; a new question defaults to Schema on, matching the API. */
+export function faqFormValues(entry) {
+  const value = entry?.parsedValue ?? parseFaqValue(entry?.value);
+  return {
+    schema: entry ? Boolean(value.schema) : true,
+    categories: value.categories ?? "",
+    question: value.question ?? "",
+    answer: value.answer ?? "",
+  };
+}
+
+/** Dirtiness is a value comparison, so a failed validation or a reverted edit is not a change. */
+export function isFaqFormDirty(initial, values) {
+  if (String(values?.question ?? "") !== String(initial?.question ?? "")) return true;
+  if (String(values?.categories ?? "") !== String(initial?.categories ?? "")) return true;
+  if (String(values?.answer ?? "") !== String(initial?.answer ?? "")) return true;
+  // An unregistered switch reports undefined; that is not an edit.
+  return (
+    values?.schema !== undefined &&
+    Boolean(values.schema) !== Boolean(initial?.schema)
+  );
+}
+

@@ -14,6 +14,11 @@ export const APP_ANTD_THEME = {
     colorText: "#0f172a",
     colorTextSecondary: "#475569",
     colorTextTertiary: "#64748b",
+    // antd defaults land below AA on our near-white surfaces: red-5 danger text is
+    // 3.15:1 on #fafbfc and #bfbfbf placeholders are 1.8:1 on white. Red-7 clears 5.3:1
+    // and slate-500 placeholders clear 4.7:1 while staying lighter than the #0f172a copy.
+    colorError: "#cf1322",
+    colorTextPlaceholder: "#64748b",
     colorBorder: "#d9e1ec",
     colorBorderSecondary: "#e5eaf2",
     colorBgLayout: "#f5f7fb",

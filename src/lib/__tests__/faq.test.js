@@ -4,8 +4,10 @@ import {
   buildDuplicatePayload,
   buildFaqPayload,
   createFaqKey,
+  faqFormValues,
   groupFaqs,
   isCompliantFaqKey,
+  isFaqFormDirty,
   maxFaqPosition,
   nextFaqPosition,
   normalizePosition,
@@ -235,3 +237,52 @@ describe('toFaqEntries', () => {
     ).toBe(false);
   });
 });
+
+describe('faqFormValues', () => {
+  it('defaults a new question to Schema on', () => {
+    expect(faqFormValues(null)).toEqual({
+      schema: true,
+      categories: '',
+      question: '',
+      answer: '',
+    });
+  });
+
+  it('loads the stored fields of an existing question', () => {
+    const entry = toFaqEntry({
+      id: 1,
+      value: JSON.stringify({
+        question: 'Hỏi',
+        answer: '<p>Đáp</p>',
+        categories: 'Giao hàng',
+        schema: false,
+      }),
+    });
+    expect(faqFormValues(entry)).toEqual({
+      schema: false,
+      categories: 'Giao hàng',
+      question: 'Hỏi',
+      answer: '<p>Đáp</p>',
+    });
+  });
+});
+
+describe('isFaqFormDirty', () => {
+  const initial = faqFormValues(null);
+
+  it('is false while every value matches the snapshot', () => {
+    expect(isFaqFormDirty(initial, { ...initial })).toBe(false);
+  });
+
+  it('detects each edited field', () => {
+    expect(isFaqFormDirty(initial, { ...initial, question: 'Hỏi' })).toBe(true);
+    expect(isFaqFormDirty(initial, { ...initial, categories: 'Giao hàng' })).toBe(true);
+    expect(isFaqFormDirty(initial, { ...initial, answer: '<p>x</p>' })).toBe(true);
+    expect(isFaqFormDirty(initial, { ...initial, schema: false })).toBe(true);
+  });
+
+  it('treats a missing value as empty instead of dirty', () => {
+    expect(isFaqFormDirty(initial, {})).toBe(false);
+  });
+});
+

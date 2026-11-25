@@ -1,10 +1,24 @@
-import { lazy, Suspense, useEffect, useMemo } from 'react';
-import { AutoComplete, Button, Flex, Form, Input, Modal, Space, Spin, Switch } from 'antd';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { AutoComplete, Button, Flex, Form, Input, Modal, Spin, Switch } from 'antd';
 import { useCreateFaq, useUpdateFaq } from '../../common/MetafieldsServices';
-import { buildFaqPayload, createFaqKey, isCompliantFaqKey } from '../../lib/faq';
+import {
+  buildFaqPayload,
+  createFaqKey,
+  faqFormValues,
+  isCompliantFaqKey,
+  isFaqFormDirty,
+} from '../../lib/faq';
+import { editorHeightFor } from '../../lib/editor';
+import { useCompactViewport } from '../../lib/useCompactViewport';
 
 // TinyMCE is only needed once the answer field renders, so the dialog shell stays light.
 const TinyEditor = lazy(() => import('../../components/editor'));
+
+const SCHEMA_TOOLTIP =
+  'Đưa câu hỏi này vào JSON-LD FAQPage để công cụ tìm kiếm và trợ lý AI đọc dưới dạng dữ liệu có cấu trúc.';
+
+// Leaves room for the header, the fields above the answer and the footer button row.
+const DESKTOP_BODY_MAX_HEIGHT = 'calc(100dvh - 240px)';
 
 const ModalMetafields = ({
   open,
@@ -17,10 +31,18 @@ const ModalMetafields = ({
   canWrite,
 }) => {
   const [form] = Form.useForm();
+  const [dirty, setDirty] = useState(false);
+  const initialValuesRef = useRef(null);
+  if (initialValuesRef.current === null) initialValuesRef.current = faqFormValues(null);
+  const compact = useCompactViewport();
   const createFaqMutation = useCreateFaq();
   const updateFaqMutation = useUpdateFaq();
   const submitting = createFaqMutation.isPending || updateFaqMutation.isPending;
   const isEditing = Boolean(editing);
+  const editorHeight = editorHeightFor(
+    typeof window === 'undefined' ? 0 : window.innerHeight,
+    compact
+  );
 
   const categorySuggestions = useMemo(() => {
     const categories = new Set();
@@ -33,13 +55,29 @@ const ModalMetafields = ({
 
   useEffect(() => {
     if (!open) return;
-    form.setFieldsValue({
-      schema: editing ? Boolean(editing.parsedValue?.schema) : true,
-      categories: editing?.parsedValue?.categories ?? '',
-      question: editing?.parsedValue?.question ?? '',
-      answer: editing?.parsedValue?.answer ?? '',
-    });
+    const initial = faqFormValues(editing);
+    initialValuesRef.current = initial;
+    form.setFieldsValue(initial);
+    setDirty(false);
   }, [open, editing, form]);
+
+  const syncDirty = (values) => setDirty(isFaqFormDirty(initialValuesRef.current, values));
+
+  const requestClose = () => {
+    if (submitting) return;
+    if (!dirty) {
+      onClose();
+      return;
+    }
+    Modal.confirm({
+      title: 'Bỏ các thay đổi chưa lưu?',
+      content: 'Câu hỏi, câu trả lời và phân loại vừa nhập sẽ không được lưu.',
+      okText: 'Bỏ thay đổi',
+      cancelText: 'Tiếp tục chỉnh sửa',
+      okButtonProps: { danger: true },
+      onOk: onClose,
+    });
+  };
 
   const handleSubmit = async (values) => {
     const payload = buildFaqPayload({
@@ -71,27 +109,55 @@ const ModalMetafields = ({
 
   return (
     <Modal
-      width={960}
+      width={compact ? '100vw' : 960}
+      style={compact ? { top: 0, margin: 0, paddingBottom: 0, maxWidth: '100vw' } : undefined}
+      styles={{
+        content: compact
+          ? {
+              height: '100dvh',
+              display: 'flex',
+              flexDirection: 'column',
+              borderRadius: 0,
+              padding: 0,
+            }
+          : undefined,
+        header: compact ? { marginBottom: 0, padding: '12px 48px 8px 16px' } : undefined,
+        body: compact
+          ? { flex: 1, minHeight: 0, overflowY: 'auto', padding: '8px 16px 16px' }
+          : { maxHeight: DESKTOP_BODY_MAX_HEIGHT, overflowY: 'auto' },
+        footer: compact
+          ? { margin: 0, padding: '12px 16px', borderTop: '1px solid #edf1f7' }
+          : undefined,
+      }}
+      centered={!compact}
       title={isEditing ? 'Chỉnh sửa câu hỏi' : 'Thêm câu hỏi mới'}
       open={open}
-      onCancel={onClose}
+      onCancel={requestClose}
+      maskClosable={false}
       destroyOnHidden
-      footer={null}
+      footer={
+        <Flex justify='flex-end' gap={8}>
+          <Button onClick={requestClose} disabled={submitting}>
+            Hủy
+          </Button>
+          <Button
+            type='primary'
+            onClick={() => form.submit()}
+            loading={submitting}
+            disabled={!canWrite}
+          >
+            Lưu
+          </Button>
+        </Flex>
+      }
     >
       <Form
         form={form}
         layout='vertical'
         className='w-full'
         onFinish={handleSubmit}
+        onValuesChange={(_, allValues) => syncDirty(allValues)}
       >
-        <Form.Item
-          name='schema'
-          label='Đưa câu hỏi này vào JSON-LD FAQPage để công cụ tìm kiếm và trợ lý AI đọc dưới dạng dữ liệu có cấu trúc'
-          layout='horizontal'
-          valuePropName='checked'
-        >
-          <Switch className='float-right' />
-        </Form.Item>
         <Form.Item
           label='Câu hỏi'
           name='question'
@@ -143,7 +209,7 @@ const ModalMetafields = ({
         <Form.Item label='Câu trả lời' name='answer'>
           <Suspense
             fallback={
-              <Flex justify='center' align='center' style={{ height: 500 }}>
+              <Flex justify='center' align='center' style={{ height: editorHeight }}>
                 <Spin />
               </Flex>
             }
@@ -151,22 +217,23 @@ const ModalMetafields = ({
             <TinyEditor
               key={editing?.id ?? 'new'}
               initialValue={editing?.parsedValue?.answer ?? ''}
-              onEditorChange={(content) => form.setFieldsValue({ answer: content })}
+              height={editorHeight}
+              compact={compact}
+              onEditorChange={(content) => {
+                form.setFieldsValue({ answer: content });
+                syncDirty(form.getFieldsValue(true));
+              }}
             />
           </Suspense>
         </Form.Item>
-        <Form.Item className='text-right mb-0!'>
-          <Space>
-            <Button onClick={onClose}>Hủy</Button>
-            <Button
-              htmlType='submit'
-              type='primary'
-              loading={submitting}
-              disabled={!canWrite}
-            >
-              Lưu
-            </Button>
-          </Space>
+        <Form.Item
+          label='Bật Schema FAQ cho Google'
+          name='schema'
+          valuePropName='checked'
+          tooltip={SCHEMA_TOOLTIP}
+          style={{ marginBottom: 0 }}
+        >
+          <Switch />
         </Form.Item>
       </Form>
     </Modal>

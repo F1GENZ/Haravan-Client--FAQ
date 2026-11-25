@@ -123,6 +123,8 @@ const CsvImportModal = ({ open, onClose, type, objectid, entries, canWrite }) =>
       open={open}
       title='Nhập câu hỏi từ CSV'
       onCancel={handleClose}
+      centered
+      styles={{ body: { maxHeight: 'calc(100dvh - 240px)', overflowY: 'auto' } }}
       destroyOnHidden
       footer={[
         <Button key='close' onClick={handleClose} disabled={running}>
