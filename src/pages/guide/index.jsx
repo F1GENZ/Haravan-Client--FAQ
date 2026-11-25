@@ -53,7 +53,7 @@ const OrderedSteps = ({ items }) => (
 const TIPS = [
   ['Viết câu hỏi rõ ràng', 'Câu hỏi ngắn, đúng cách khách hàng thường hỏi; tránh thuật ngữ kỹ thuật.'],
   ['Trả lời đầy đủ', 'Dùng danh sách, liên kết và định dạng để câu trả lời dễ đọc.'],
-  ['Bật Schema Markup có chọn lọc', 'Bật cho các câu hỏi quan trọng để Google có thể hiển thị chúng dạng rich result.'],
+  ['Bật Schema Markup có chọn lọc', 'Bật cho các câu hỏi quan trọng để cặp hỏi đáp vào JSON-LD FAQPage cho công cụ tìm kiếm và trợ lý AI đọc; ứng dụng không đảm bảo hiển thị đặc biệt.'],
   ['Phân loại nhất quán', 'Dùng cùng một tên phân loại cho cùng chủ đề để danh sách gọn và dễ quản lý.'],
   ['Cập nhật thường xuyên', 'Rà lại FAQ mỗi khi chính sách giao hàng, đổi trả hay bảo hành thay đổi.'],
   ['Chuẩn bị nội dung hàng loạt', 'Với danh sách dài, soạn trong bảng tính rồi nhập CSV theo đúng tiêu đề cột.'],
@@ -99,7 +99,7 @@ const Guide = () => (
             { title: 'Nhập câu hỏi', description: 'Đây là tiêu đề hiển thị trong danh sách FAQ trên website.', status: 'finish' },
             { title: 'Chọn phân loại', description: 'Chọn phân loại đã có trong gợi ý hoặc nhập phân loại mới.', status: 'finish' },
             { title: 'Soạn câu trả lời', description: 'Định dạng chữ, tạo liên kết, danh sách và bảng trong trình soạn thảo.', status: 'finish' },
-            { title: 'Bật Schema Markup (tùy chọn)', description: 'Câu hỏi được đưa vào JSON-LD FAQPage để Google đọc được.', status: 'finish' },
+            { title: 'Bật Schema Markup (tùy chọn)', description: 'Đưa câu hỏi vào JSON-LD FAQPage để công cụ tìm kiếm và trợ lý AI đọc cặp hỏi đáp dưới dạng dữ liệu có cấu trúc.', status: 'finish' },
             { title: 'Lưu', description: 'Câu hỏi mới được xếp vào cuối danh sách.', status: 'finish' },
           ]}
         />
@@ -160,10 +160,14 @@ const Guide = () => (
         </Paragraph>
         <OrderedSteps
           items={[
-            <><Text code>{"{% include 'f1genz-faq' %}"}</Text>: tự chọn FAQ theo template (sản phẩm, danh mục, trang hoặc shop).</>,
-            <><Text code>{"{% assign faq_source = 'shop' %}{% include 'f1genz-faq' %}"}</Text>: luôn hiển thị FAQ của shop.</>,
+            <><Text code style={{ wordBreak: 'break-all' }}>{"{% assign faq_title = 'Câu hỏi thường gặp' %}{% include 'f1genz-faq' %}"}</Text>: đặt tiêu đề rồi tự chọn FAQ theo template (sản phẩm, danh mục, trang hoặc shop).</>,
+            <><Text code style={{ wordBreak: 'break-all' }}>{"{% assign faq_title = 'Câu hỏi thường gặp' %}{% assign faq_source = 'shop' %}{% include 'f1genz-faq' %}"}</Text>: đặt tiêu đề và luôn hiển thị FAQ của shop.</>,
           ]}
         />
+        <Paragraph style={{ margin: 0 }}>
+          Bỏ dòng <Text code>assign faq_title</Text> nếu không muốn hiện tiêu đề. Khi bộ câu hỏi có từ 2
+          phân loại trở lên, snippet nhóm câu hỏi theo <Text strong>Phân loại</Text>.
+        </Paragraph>
         <Alert
           type='info'
           showIcon

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Alert, Button, Layout, Menu, Tag, Typography } from 'antd';
+import { Suspense, useEffect, useState } from 'react';
+import { Alert, Button, Flex, Layout, Menu, Spin, Tag, Typography } from 'antd';
 import {
   AppstoreOutlined,
   BookOutlined,
@@ -345,7 +345,15 @@ const MainLayout = ({ children }) => {
             {sessionReady && trial?.can_write === false ? (
               <Alert type='warning' showIcon message={TRIAL_EXPIRED_MESSAGE} style={{ marginBottom: 16 }} />
             ) : null}
-            {children}
+            <Suspense
+              fallback={
+                <Flex justify='center' align='center' style={{ minHeight: 320 }}>
+                  <Spin />
+                </Flex>
+              }
+            >
+              {children}
+            </Suspense>
           </div>
         </Content>
       </Layout>

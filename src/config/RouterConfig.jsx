@@ -1,10 +1,12 @@
-import Metafields from "../pages/metafields/index";
-import Login from "../pages/auth/login/index";
-import GrandService from "../pages/auth/grandservice/index";
-import Introduction from "../pages/introduction/index";
-import Guide from "../pages/guide/index";
-import Storefront from "../pages/storefront/index";
-import Contact from "../pages/contact/index";
+import { lazy } from "react";
+
+const Metafields = lazy(() => import("../pages/metafields/index"));
+const Login = lazy(() => import("../pages/auth/login/index"));
+const GrandService = lazy(() => import("../pages/auth/grandservice/index"));
+const Introduction = lazy(() => import("../pages/introduction/index"));
+const Guide = lazy(() => import("../pages/guide/index"));
+const Storefront = lazy(() => import("../pages/storefront/index"));
+const Contact = lazy(() => import("../pages/contact/index"));
 
 export const routes = [
   {

@@ -28,8 +28,8 @@ const FEATURES = [
   },
   {
     icon: <StarOutlined style={{ color: '#faad14', fontSize: 18 }} />,
-    title: 'Schema Markup cho SEO',
-    text: 'Câu hỏi bật Schema Markup được đưa vào JSON-LD FAQPage để Google đọc và hiển thị dạng rich result.',
+    title: 'Schema Markup cho dữ liệu có cấu trúc',
+    text: 'Câu hỏi bật Schema Markup được đưa vào JSON-LD FAQPage để công cụ tìm kiếm và trợ lý AI đọc cặp hỏi đáp dưới dạng dữ liệu có cấu trúc; ứng dụng không đảm bảo hiển thị đặc biệt nào trên kết quả tìm kiếm.',
   },
   {
     icon: <OrderedListOutlined style={{ color: '#722ed1', fontSize: 18 }} />,
@@ -56,7 +56,7 @@ const FEATURES = [
 const BENEFITS = [
   'Giảm câu hỏi lặp lại gửi tới đội chăm sóc khách hàng.',
   'Khách hàng tự tìm được câu trả lời ngay trên trang sản phẩm.',
-  'Tăng khả năng xuất hiện nổi bật trên Google nhờ dữ liệu có cấu trúc.',
+  'Câu hỏi và câu trả lời có dữ liệu có cấu trúc để công cụ tìm kiếm và trợ lý AI đọc đúng nội dung.',
   'Quản lý tập trung mọi FAQ của cửa hàng ở một nơi.',
 ];
 

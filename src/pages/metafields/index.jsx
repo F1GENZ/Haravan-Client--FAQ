@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
-import { Button, Card, Collapse, Empty, Flex, Popconfirm, Space, Spin, Tag, Typography } from 'antd';
+import { Alert, Button, Card, Collapse, Empty, Flex, Popconfirm, Space, Spin, Tag, Typography } from 'antd';
 import {
   CopyOutlined,
   DownloadOutlined,
@@ -28,6 +28,7 @@ import {
   nextFaqPosition,
 } from '../../lib/faq';
 import { faqEntryToCsvRow, serializeCsv } from '../../lib/csv';
+import { hasPendingFaq } from '../../lib/pendingFaqs';
 import PageHeader from '../../components/page-header';
 import LoginRequired from '../../components/login-required';
 import ResourceSearch from '../../components/resource-search';
@@ -95,6 +96,7 @@ const Metafields = () => {
 
   const groups = useMemo(() => groupFaqs(entries), [entries]);
   const nextPosition = useMemo(() => nextFaqPosition(entries), [entries]);
+  const hasPending = hasPendingFaq(entries);
   const targetName = resourceType === 'shop' ? '' : resourceTitle || `#${objectid}`;
 
   const openCreate = () => {
@@ -207,7 +209,7 @@ const Metafields = () => {
                 <Button
                   icon={<OrderedListOutlined />}
                   onClick={() => setOrderEntries(entries)}
-                  disabled={!canWrite || entries.length < 2}
+                  disabled={!canWrite || entries.length < 2 || hasPending}
                 >
                   Sắp xếp
                 </Button>
@@ -224,6 +226,15 @@ const Metafields = () => {
             )}
           </Space>
         </Flex>
+
+        {hasPending ? (
+          <Alert
+            type='info'
+            showIcon
+            style={{ marginBottom: 12 }}
+            message='Câu hỏi vừa tạo đang chờ Haravan đồng bộ (khoảng 1 phút). Chỉnh sửa, xóa và sắp xếp sẽ dùng được sau khi đồng bộ xong.'
+          />
+        ) : null}
 
         {isLoading ? (
           <Flex justify='center' style={{ padding: '32px 0' }}>
@@ -282,6 +293,11 @@ const Metafields = () => {
                           </Text>
                         </div>
                         <Flex align='center' gap={4} wrap='wrap'>
+                          {item.pending ? (
+                            <Tag color='gold' style={{ marginInlineEnd: 4 }}>
+                              Đang chờ đồng bộ
+                            </Tag>
+                          ) : null}
                           {value.schema ? (
                             <Tag color='green' style={{ marginInlineEnd: 4 }}>
                               Schema Markup
@@ -299,7 +315,7 @@ const Metafields = () => {
                             type='text'
                             icon={<EditOutlined />}
                             onClick={() => openEdit(item)}
-                            disabled={!canWrite}
+                            disabled={!canWrite || item.pending}
                           >
                             Chỉnh sửa
                           </Button>
@@ -311,9 +327,9 @@ const Metafields = () => {
                             }
                             okText='Có'
                             cancelText='Không'
-                            disabled={!canWrite}
+                            disabled={!canWrite || item.pending}
                           >
-                            <Button danger type='text' icon={<DeleteOutlined />} disabled={!canWrite}>
+                            <Button danger type='text' icon={<DeleteOutlined />} disabled={!canWrite || item.pending}>
                               Xóa
                             </Button>
                           </Popconfirm>

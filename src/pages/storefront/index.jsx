@@ -19,11 +19,11 @@ const cardTitle = (icon, text) => (
 const INCLUDE_LINES = [
   {
     label: 'Tự động theo template (khuyên dùng)',
-    code: "{% include 'f1genz-faq' %}",
+    code: "{% assign faq_title = 'Câu hỏi thường gặp' %}{% include 'f1genz-faq' %}",
   },
   {
     label: 'Luôn hiển thị FAQ của shop',
-    code: "{% assign faq_source = 'shop' %}{% include 'f1genz-faq' %}",
+    code: "{% assign faq_title = 'Câu hỏi thường gặp' %}{% assign faq_source = 'shop' %}{% include 'f1genz-faq' %}",
   },
 ];
 
@@ -161,6 +161,11 @@ const Storefront = () => {
               </div>
             ))}
           </Space>
+          <Paragraph className='mt-3 mb-0'>
+            <Text code>faq_title</Text> là tiêu đề hiển thị phía trên danh sách; bỏ dòng{' '}
+            <Text code>assign faq_title</Text> nếu không muốn hiện tiêu đề. Khi bộ câu hỏi có từ 2
+            phân loại trở lên, snippet nhóm câu hỏi theo <Text strong>Phân loại</Text>.
+          </Paragraph>
           <Alert
             className='mt-4'
             type='info'

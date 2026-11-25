@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Button, Flex, Modal, Progress, Typography, Upload, message } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
-import { createFaq } from '../../common/MetafieldsServices';
+import { createFaq, registerCreatedFaq } from '../../common/MetafieldsServices';
 import { toResultError } from '../../common/apiResult';
 import { parseFaqCsv } from '../../lib/csv';
 import { buildFaqPayload, createFaqKey, nextFaqPosition } from '../../lib/faq';
@@ -81,7 +81,8 @@ const CsvImportModal = ({ open, onClose, type, objectid, entries, canWrite }) =>
       });
 
       try {
-        await createFaq(payload);
+        const metafield = await createFaq(payload);
+        registerCreatedFaq(queryClient, payload, metafield);
         created += 1;
       } catch (error) {
         const result = toResultError(error);
