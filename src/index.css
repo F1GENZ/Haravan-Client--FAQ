@@ -27,3 +27,111 @@
 }
 .ant-modal{ top: 10px; }
 .tox-promotion{ display: none; }
+
+.f1g-admin-layout {
+  color: #0f172a;
+}
+
+.f1g-admin-content-shell {
+  min-width: 0;
+}
+
+.f1g-admin-sider,
+.f1g-admin-sider .ant-layout-sider-children {
+  background: #001529 !important;
+}
+
+.f1g-admin-menu {
+  padding: 6px 8px;
+}
+
+.f1g-admin-menu.ant-menu-dark .ant-menu-item {
+  width: 100%;
+  height: 40px;
+  margin: 2px 0;
+  padding-inline: 5px 10px !important;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  line-height: 40px;
+}
+
+.f1g-admin-menu.ant-menu-dark .ant-menu-item .anticon {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.f1g-admin-menu.ant-menu-dark .ant-menu-item:not(.ant-menu-item-selected):hover {
+  background: rgba(255, 255, 255, 0.10) !important;
+  color: #fff;
+}
+
+.f1g-admin-menu.ant-menu-dark .ant-menu-item-selected {
+  color: #fff;
+  font-weight: 700;
+}
+
+.f1g-admin-menu.ant-menu-dark .ant-menu-item-selected .anticon {
+  color: #fff;
+}
+
+.f1g-admin-layout .ant-card {
+  border-color: #e5eaf2;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.f1g-admin-layout .ant-card-head {
+  min-height: 48px;
+  border-bottom-color: #edf1f7;
+}
+
+.f1g-admin-layout .ant-card-head-title {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.f1g-admin-layout .ant-typography-secondary,
+.f1g-admin-layout .ant-breadcrumb,
+.f1g-admin-layout .ant-breadcrumb a {
+  color: #475569;
+}
+
+.f1g-admin-layout .ant-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.f1g-admin-layout .ant-btn:not(.ant-btn-sm):not(.ant-btn-link):not(.ant-btn-text) {
+  min-height: 36px;
+}
+
+.f1g-admin-layout .ant-btn-text,
+.f1g-admin-layout .ant-btn-link {
+  min-height: 32px;
+}
+
+.f1g-admin-layout .ant-btn:focus-visible,
+.f1g-admin-layout a:focus-visible,
+.f1g-admin-layout [role="button"]:focus-visible {
+  outline: 2px solid #1677ff;
+  outline-offset: 2px;
+}
+
+.f1g-admin-layout .ant-input:focus,
+.f1g-admin-layout .ant-input-focused,
+.f1g-admin-layout .ant-input-affix-wrapper-focused,
+.f1g-admin-layout .ant-select-focused .ant-select-selector {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.14) !important;
+}
+
+.f1g-admin-layout .ant-input-affix-wrapper .ant-input:focus {
+  box-shadow: none !important;
+}
+
+.f1g-admin-layout .ant-input,
+.f1g-admin-layout .ant-select-selector {
+  border-color: #d9e1ec !important;
+}

@@ -133,7 +133,7 @@ const MainLayout = ({ children }) => {
   const goHome = () => navigate('/');
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f5f7fb' }}>
+    <Layout className='f1g-admin-layout' style={{ minHeight: '100vh', background: '#f5f7fb' }}>
       {isMobile && mobileOpen ? (
         <div
           aria-hidden='true'
@@ -177,6 +177,7 @@ const MainLayout = ({ children }) => {
       <Sider
         width={SIDER_WIDTH}
         theme='dark'
+        className='f1g-admin-sider'
         style={{
           position: 'fixed',
           left: isMobile ? (mobileOpen ? 0 : -SIDER_WIDTH) : 0,
@@ -232,6 +233,7 @@ const MainLayout = ({ children }) => {
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
             <Menu
               theme='dark'
+              className='f1g-admin-menu'
               mode='inline'
               selectedKeys={[selectedKeyFor(location.pathname)]}
               items={MENU_ITEMS}
@@ -339,7 +341,7 @@ const MainLayout = ({ children }) => {
         }}
       >
         <Content style={{ padding: isMobile ? 14 : 24, minWidth: 0 }}>
-          <div style={{ width: '100%', maxWidth: CONTENT_MAX_WIDTH, margin: '0 auto' }}>
+          <div className='f1g-admin-content-shell' style={{ width: '100%', maxWidth: CONTENT_MAX_WIDTH, margin: '0 auto' }}>
             {sessionReady && trial?.can_write === false ? (
               <Alert type='warning' showIcon message={TRIAL_EXPIRED_MESSAGE} style={{ marginBottom: 16 }} />
             ) : null}
