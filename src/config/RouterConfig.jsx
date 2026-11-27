@@ -6,6 +6,7 @@ const GrandService = lazy(() => import("../pages/auth/grandservice/index"));
 const Introduction = lazy(() => import("../pages/introduction/index"));
 const Guide = lazy(() => import("../pages/guide/index"));
 const Storefront = lazy(() => import("../pages/storefront/index"));
+const Questions = lazy(() => import("../pages/questions/index"));
 const Contact = lazy(() => import("../pages/contact/index"));
 
 export const routes = [
@@ -32,6 +33,12 @@ export const routes = [
     layout: true,
     isPrivate: false,
     page: <Metafields />,
+  },
+  {
+    path: "/questions",
+    layout: true,
+    isPrivate: false,
+    page: <Questions />,
   },
   {
     path: "/storefront",

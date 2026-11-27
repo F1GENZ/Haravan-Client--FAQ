@@ -1,5 +1,5 @@
-import { Suspense, useEffect, useState } from 'react';
-import { Alert, Button, Flex, Layout, Menu, Spin, Tag, Typography } from 'antd';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Alert, Badge, Button, Flex, Layout, Menu, Spin, Tag, Typography } from 'antd';
 import {
   AppstoreOutlined,
   BookOutlined,
@@ -8,6 +8,7 @@ import {
   CustomerServiceOutlined,
   FileTextOutlined,
   GlobalOutlined,
+  InboxOutlined,
   InfoCircleOutlined,
   MenuOutlined,
   QuestionCircleOutlined,
@@ -15,6 +16,7 @@ import {
   ShoppingOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useQuestionCount } from '../../common/QuestionServices';
 import { useTrialInfo } from '../../common/TrialService';
 import { getOrgid, hasCredentials } from '../../lib/session';
 import { TRIAL_EXPIRED_MESSAGE } from '../../lib/messages';
@@ -30,11 +32,28 @@ const SIDEBAR_BORDER = 'rgba(255, 255, 255, 0.10)';
 const CONTENT_MAX_WIDTH = 1560;
 const BRAND_GRADIENT = 'linear-gradient(135deg, #1677ff, #0958d9)';
 
+// Lives in the menu label so every layout render shares one react-query cache entry.
+const QuestionBadge = () => {
+  const { data: pending } = useQuestionCount();
+  if (!pending) return null;
+  return <Badge count={pending} size='small' overflowCount={99} />;
+};
+
 const MENU_ITEMS = [
   { key: '/', icon: <QuestionCircleOutlined />, label: 'Câu hỏi của shop' },
   { key: '/products', icon: <ShoppingOutlined />, label: 'Sản phẩm' },
   { key: '/collections', icon: <AppstoreOutlined />, label: 'Danh mục' },
   { key: '/pages', icon: <FileTextOutlined />, label: 'Trang' },
+  {
+    key: '/questions',
+    icon: <InboxOutlined />,
+    label: (
+      <Flex align='center' justify='space-between' gap={8}>
+        <span>Câu hỏi của khách</span>
+        <QuestionBadge />
+      </Flex>
+    ),
+  },
   { key: '/storefront', icon: <GlobalOutlined />, label: 'Hiển thị trên website' },
   { key: '/guide', icon: <BookOutlined />, label: 'Hướng dẫn' },
   { key: '/introduction', icon: <InfoCircleOutlined />, label: 'Giới thiệu' },
