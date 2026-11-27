@@ -37,6 +37,7 @@ import {
   useFaqs,
   useReorderFaqs,
 } from '../../common/MetafieldsServices';
+import { useResourceLookup } from '../../common/ResourceService';
 import { toResultError } from '../../common/apiResult';
 import { useCanWrite } from '../../common/TrialService';
 import { downloadTextFile } from '../../common/download';
@@ -191,7 +192,9 @@ const Metafields = () => {
 
   const nextPosition = useMemo(() => nextFaqPosition(entries), [entries]);
   const hasPending = hasPendingFaq(entries);
-  const targetName = resourceType === 'shop' ? '' : resourceTitle || `#${objectid}`;
+  const needsLookup = resourceType !== 'shop' && hasTarget && !resourceTitle;
+  const { data: lookedUp } = useResourceLookup(resourceType, objectid, { enabled: needsLookup });
+  const targetName = resourceType === 'shop' ? '' : resourceTitle || lookedUp?.title || `#${objectid}`;
   const listErrorResult = error ? toResultError(error) : null;
   const listError = listErrorResult
     ? listErrorCopy({

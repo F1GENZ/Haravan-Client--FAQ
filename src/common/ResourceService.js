@@ -29,3 +29,21 @@ export function useResourceSearch(type, query, limit = 10) {
     refetchOnWindowFocus: false,
   });
 }
+
+export function useResourceLookup(type, objectid, { enabled = true } = {}) {
+  const id = (objectid ?? "").trim();
+  return useQuery({
+    queryKey: ["resource-lookup", type, id],
+    queryFn: async () => {
+      const response = await httpClient.get("/api/oauth/install/resource/lookup", {
+        params: { type, id },
+      });
+      return toResult(response).data?.resource ?? null;
+    },
+    enabled: enabled && hasCredentials() && Boolean(type) && /^\d+$/.test(id) && id !== "0",
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+}
