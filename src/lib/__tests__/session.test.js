@@ -58,7 +58,22 @@ describe('parseSessionFragment', () => {
 
 function installStorage() {
   const data = new Map();
+  const make = () => ({
+    getItem: (key) => (data.has(key) ? data.get(key) : null),
+    setItem: (key, value) => data.set(key, String(value)),
+    removeItem: (key) => data.delete(key),
+  });
   globalThis.window = {
+    localStorage: make(),
+    sessionStorage: make(),
+  };
+  return data;
+}
+
+function installOnlySessionStorage() {
+  const data = new Map();
+  globalThis.window = {
+    localStorage: null,
     sessionStorage: {
       getItem: (key) => (data.has(key) ? data.get(key) : null),
       setItem: (key, value) => data.set(key, String(value)),
@@ -88,5 +103,15 @@ describe('session storage', () => {
     expect(data.has(SESSION_KEY)).toBe(false);
     expect(data.get(ORGID_KEY)).toBe('123');
     expect(getOrgid()).toBe('123');
+  });
+
+  it('persists across tabs through localStorage, falling back to sessionStorage', () => {
+    installStorage();
+    storeSession({ session: 'abc.def', orgid: '123' });
+    expect(globalThis.window.localStorage.getItem(SESSION_KEY)).toBe('abc.def');
+
+    const legacy = installOnlySessionStorage();
+    storeSession({ session: 'xyz', orgid: '9' });
+    expect(legacy.get(SESSION_KEY)).toBe('xyz');
   });
 });

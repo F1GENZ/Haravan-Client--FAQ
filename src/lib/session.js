@@ -10,9 +10,16 @@ function isStoredValue(value) {
   );
 }
 
+/**
+ * localStorage first: the Haravan authorize page shows the consent screen on every visit even
+ * after install, so a session that dies with the tab means a consent click for every open.
+ * Keeping the credential across tabs (its 12h server-side expiry still applies) is what lets
+ * a merchant reopen the app without a new OAuth round trip. sessionStorage is the fallback
+ * for environments where localStorage is unavailable.
+ */
 function getStorage() {
-  if (typeof window === "undefined" || !window.sessionStorage) return null;
-  return window.sessionStorage;
+  if (typeof window === "undefined") return null;
+  return window.localStorage || window.sessionStorage || null;
 }
 
 export function parseSessionFragment(hash) {
