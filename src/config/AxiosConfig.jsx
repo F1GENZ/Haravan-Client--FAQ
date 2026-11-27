@@ -60,7 +60,9 @@ httpClient.interceptors.response.use(
       clearSessionToken();
       const path = window.location.pathname;
       if (!PUBLIC_ROUTES.some((route) => path.startsWith(route))) {
-        window.location.replace("/install/login");
+        // Embedded shops that have never installed the app get a 401 no matter how fresh the
+        // bridge token is; force=oauth tells the login page not to bounce straight back here.
+        window.location.replace(isEmbedded() ? "/install/login?force=oauth" : "/install/login");
       }
     }
     return Promise.reject(error);
