@@ -133,7 +133,7 @@ describe('validateSuggestionDraft', () => {
 });
 
 describe('suggestionToPayload', () => {
-  it('builds a schema-marked create payload with an HTML answer', () => {
+  it('builds a create payload with an HTML answer', () => {
     const payload = suggestionToPayload({
       type: 'products',
       objectid: 1001,
@@ -152,7 +152,6 @@ describe('suggestionToPayload', () => {
       question: 'Giao hàng mất bao lâu?',
       answer: '<p>Giao trong 2 ngày.</p><p>Đổi trả 30 ngày.</p>',
       categories: 'Giao hàng',
-      schema: true,
       position: 7,
     });
   });
@@ -166,7 +165,6 @@ describe('suggestionToPayload', () => {
     });
     expect(payload.answer).toBe('<p>Không &lt;b&gt;có&lt;/b&gt;.</p>');
     expect(payload.categories).toBe(DEFAULT_CATEGORY);
-    expect(payload.schema).toBe(true);
     expect(payload.position).toBe(1);
     expect(payload.key).toMatch(/^[a-z0-9_]{1,30}$/);
   });

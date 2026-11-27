@@ -4,7 +4,6 @@ export const FAQ_CSV_COLUMNS = [
   "question",
   "answer",
   "categories",
-  "schema",
   "position",
 ];
 
@@ -99,11 +98,29 @@ export function parseCsv(text) {
   return rows;
 }
 
+const LEGACY_CSV_COLUMNS = [
+  "question",
+  "answer",
+  "categories",
+  "schema",
+  "position",
+];
+
+function normalizeCsvHeader(header) {
+  return (header ?? []).map((cell) => String(cell).trim().toLowerCase()).join(",");
+}
+
 export function validateCsvHeader(header) {
-  const normalized = (header ?? []).map((cell) =>
-    String(cell).trim().toLowerCase()
+  const normalized = normalizeCsvHeader(header);
+  return (
+    normalized === FAQ_CSV_COLUMNS.join(",") ||
+    normalized === LEGACY_CSV_COLUMNS.join(",")
   );
-  return normalized.join(",") === FAQ_CSV_COLUMNS.join(",");
+}
+
+function csvColumnOffset(header) {
+  // Files exported before the schema column retired still carry it; the column is ignored.
+  return normalizeCsvHeader(header) === LEGACY_CSV_COLUMNS.join(",") ? 1 : 0;
 }
 
 export function parseFaqCsv(text) {
@@ -117,12 +134,15 @@ export function parseFaqCsv(text) {
     );
   }
 
+  const columnOffset = csvColumnOffset(matrix[0]);
+  const columnCount = FAQ_CSV_COLUMNS.length + columnOffset;
+
   const rows = [];
   for (let index = 1; index < matrix.length; index += 1) {
     const cells = matrix[index];
     const line = index + 1;
 
-    if (cells.length !== FAQ_CSV_COLUMNS.length) {
+    if (cells.length !== columnCount) {
       rows.push({ line, error: "Số cột không khớp với tiêu đề." });
       continue;
     }
@@ -130,18 +150,12 @@ export function parseFaqCsv(text) {
     const question = unescapeFormulaTextField(cells[0]);
     const answer = unescapeFormulaTextField(cells[1]);
     const categories = unescapeFormulaTextField(cells[2]);
-    const schemaRaw = cells[3];
-    const positionRaw = cells[4];
+    const positionRaw = cells[3 + columnOffset];
     if (!question.trim()) {
       rows.push({ line, error: "Câu hỏi không được để trống." });
       continue;
     }
 
-    const schemaText = String(schemaRaw).trim().toLowerCase();
-    if (!["", "true", "false", "1", "0"].includes(schemaText)) {
-      rows.push({ line, error: `Giá trị schema không hợp lệ: "${schemaRaw}".` });
-      continue;
-    }
 
     const positionText = String(positionRaw).trim();
     let position = null;
@@ -161,7 +175,6 @@ export function parseFaqCsv(text) {
         question: question.trim(),
         answer,
         categories: categories.trim(),
-        schema: schemaText === "true" || schemaText === "1",
         position,
       },
     });
@@ -176,7 +189,6 @@ export function faqEntryToCsvRow(entry) {
     question: value.question ?? "",
     answer: value.answer ?? "",
     categories: value.categories ?? "",
-    schema: Boolean(value.schema),
     position: entry.position ?? "",
   };
 }

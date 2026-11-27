@@ -566,7 +566,7 @@ const Storefront = () => {
             className='mt-4'
             type='info'
             showIcon
-            message='Snippet hiển thị dạng <details> không cần JavaScript và tự sinh JSON-LD FAQPage cho các câu hỏi có bật Schema Markup.'
+            message='Snippet hiển thị dạng <details> không cần JavaScript và tự sinh JSON-LD FAQPage cho mọi câu hỏi đang hiển thị.'
           />
         </Card>
       </Space>

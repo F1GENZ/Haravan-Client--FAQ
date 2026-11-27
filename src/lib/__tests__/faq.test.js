@@ -136,7 +136,6 @@ describe('buildFaqPayload', () => {
       question: '  Câu hỏi  ',
       answer: '<p>Trả lời</p>',
       categories: '  Giao hàng  ',
-      schema: 1,
       position: 5,
     });
 
@@ -147,7 +146,6 @@ describe('buildFaqPayload', () => {
       question: 'Câu hỏi',
       answer: '<p>Trả lời</p>',
       categories: 'Giao hàng',
-      schema: true,
       position: 5,
     });
     expect('metafieldid' in payload).toBe(false);
@@ -162,13 +160,12 @@ describe('buildFaqPayload', () => {
       question: 'Hỏi',
       answer: '',
       categories: '',
-      schema: false,
       position: 0,
     });
 
     expect(payload.metafieldid).toBe(99);
     expect('position' in payload).toBe(false);
-    expect(payload.schema).toBe(false);
+    expect('schema' in payload).toBe(false);
   });
 
   it('keeps the supplied position on update', () => {
@@ -180,7 +177,6 @@ describe('buildFaqPayload', () => {
       question: 'Hỏi',
       answer: '',
       categories: '',
-      schema: true,
       position: 3,
     });
 
@@ -189,7 +185,7 @@ describe('buildFaqPayload', () => {
 });
 
 describe('buildDuplicatePayload', () => {
-  it('copies the answer, category and schema with a new position and key', () => {
+  it('copies the answer and category with a new position and key', () => {
     const entry = toFaqEntry({
       id: 7,
       key: 'faq_legacy',
@@ -215,7 +211,6 @@ describe('buildDuplicatePayload', () => {
       question: 'Giao hàng mất bao lâu? (bản sao)',
       answer: '<p>2-3 ngày</p>',
       categories: 'Giao hàng',
-      schema: true,
       position: 9,
     });
   });
@@ -227,23 +222,17 @@ describe('toFaqEntries', () => {
     expect(toFaqEntries([null, { id: 1, value: '{}' }])).toHaveLength(1);
   });
 
-  it('normalizes legacy schema values to booleans', () => {
+  it('passes stored values through, including retired schema keys', () => {
+    // The retired schema flag stays in the parsed value untouched; the storefront ignores it.
     expect(
-      toFaqEntry({ id: 1, value: JSON.stringify({ schema: 'true' }) }).parsedValue.schema
-    ).toBe(true);
-    expect(
-      toFaqEntry({ id: 2, value: JSON.stringify({ schema: 'false' }) }).parsedValue.schema
-    ).toBe(false);
-    expect(
-      toFaqEntry({ id: 3, value: JSON.stringify({ schema: 1 }) }).parsedValue.schema
-    ).toBe(false);
+      toFaqEntry({ id: 1, value: JSON.stringify({ schema: 'true', question: 'Hỏi' }) }).parsedValue.schema
+    ).toBe('true');
   });
 });
 
 describe('faqFormValues', () => {
-  it('defaults a new question to Schema on', () => {
+  it('starts a new question with empty fields only', () => {
     expect(faqFormValues(null)).toEqual({
-      schema: true,
       categories: '',
       question: '',
       answer: '',
@@ -257,11 +246,9 @@ describe('faqFormValues', () => {
         question: 'Hỏi',
         answer: '<p>Đáp</p>',
         categories: 'Giao hàng',
-        schema: false,
       }),
     });
     expect(faqFormValues(entry)).toEqual({
-      schema: false,
       categories: 'Giao hàng',
       question: 'Hỏi',
       answer: '<p>Đáp</p>',
@@ -280,9 +267,7 @@ describe('isFaqFormDirty', () => {
     expect(isFaqFormDirty(initial, { ...initial, question: 'Hỏi' })).toBe(true);
     expect(isFaqFormDirty(initial, { ...initial, categories: 'Giao hàng' })).toBe(true);
     expect(isFaqFormDirty(initial, { ...initial, answer: '<p>x</p>' })).toBe(true);
-    expect(isFaqFormDirty(initial, { ...initial, schema: false })).toBe(true);
   });
-
   it('treats a missing value as empty instead of dirty', () => {
     expect(isFaqFormDirty(initial, {})).toBe(false);
   });

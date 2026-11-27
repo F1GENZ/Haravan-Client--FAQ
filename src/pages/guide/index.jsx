@@ -54,7 +54,6 @@ const OrderedSteps = ({ items }) => (
 const TIPS = [
   ['Viết câu hỏi rõ ràng', 'Câu hỏi ngắn, đúng cách khách hàng thường hỏi; tránh thuật ngữ kỹ thuật.'],
   ['Trả lời đầy đủ', 'Dùng danh sách, liên kết và định dạng để câu trả lời dễ đọc.'],
-  ['Bật Schema Markup có chọn lọc', 'Bật cho các câu hỏi quan trọng để cặp hỏi đáp vào JSON-LD FAQPage cho công cụ tìm kiếm và trợ lý AI đọc; ứng dụng không đảm bảo hiển thị đặc biệt.'],
   ['Phân loại nhất quán', 'Dùng cùng một tên phân loại cho cùng chủ đề để danh sách gọn và dễ quản lý.'],
   ['Cập nhật thường xuyên', 'Rà lại FAQ mỗi khi chính sách giao hàng, đổi trả hay bảo hành thay đổi.'],
   ['Chuẩn bị nội dung hàng loạt', 'Với danh sách dài, soạn trong bảng tính rồi nhập CSV theo đúng tiêu đề cột.'],
@@ -100,7 +99,6 @@ const Guide = () => (
             { title: 'Nhập câu hỏi', description: 'Đây là tiêu đề hiển thị trong danh sách FAQ trên website.', status: 'finish' },
             { title: 'Chọn phân loại', description: 'Chọn phân loại đã có trong gợi ý hoặc nhập phân loại mới.', status: 'finish' },
             { title: 'Soạn câu trả lời', description: 'Định dạng chữ, tạo liên kết, danh sách và bảng trong trình soạn thảo.', status: 'finish' },
-            { title: 'Bật Schema Markup (tùy chọn)', description: 'Đưa câu hỏi vào JSON-LD FAQPage để công cụ tìm kiếm và trợ lý AI đọc cặp hỏi đáp dưới dạng dữ liệu có cấu trúc.', status: 'finish' },
             { title: 'Lưu', description: 'Câu hỏi mới được xếp vào cuối danh sách.', status: 'finish' },
           ]}
         />
@@ -109,8 +107,8 @@ const Guide = () => (
       <Section icon={<EditOutlined />} color='#fa8c16' title='Bước 3: Chỉnh sửa, nhân bản và xóa'>
         <OrderedSteps
           items={[
-            <>Bấm <Text strong>Chỉnh sửa</Text> để sửa câu hỏi, câu trả lời, phân loại hoặc Schema Markup.</>,
-            <>Bấm <Text strong>Nhân bản</Text> để tạo bản sao có hậu tố "(bản sao)", giữ nguyên câu trả lời, phân loại và Schema Markup.</>,
+            <>Bấm <Text strong>Chỉnh sửa</Text> để sửa câu hỏi, câu trả lời hoặc phân loại.</>,
+            <>Bấm <Text strong>Nhân bản</Text> để tạo bản sao có hậu tố "(bản sao)", giữ nguyên câu trả lời và phân loại.</>,
             <>Bấm <Text strong>Xóa</Text> rồi xác nhận để xóa câu hỏi.</>,
           ]}
         />
@@ -140,12 +138,10 @@ const Guide = () => (
           Dòng đầu tiên là tiêu đề theo đúng thứ tự: <Tag>question</Tag>
           <Tag>answer</Tag>
           <Tag>categories</Tag>
-          <Tag>schema</Tag>
           <Tag>position</Tag>
         </Paragraph>
         <ul style={{ margin: 0, paddingLeft: 20, listStyle: 'disc', display: 'grid', gap: 4 }}>
           <li><Text code>answer</Text> có thể chứa HTML, dấu phẩy, dấu ngoặc kép và xuống dòng.</li>
-          <li><Text code>schema</Text> nhận <Text code>true</Text> hoặc <Text code>false</Text>.</li>
           <li><Text code>position</Text> có thể để trống để tự xếp vào cuối danh sách.</li>
         </ul>
         <Paragraph type='secondary' style={{ margin: 0 }}>
@@ -203,7 +199,7 @@ const Guide = () => (
         <Alert
           type='info'
           showIcon
-          message='FAQ hiển thị dạng mở rộng/thu gọn, không cần JavaScript. JSON-LD FAQPage chỉ chứa câu hỏi có bật Schema Markup, và snippet không hiển thị gì khi danh sách trống.'
+          message='FAQ hiển thị dạng mở rộng/thu gọn, không cần JavaScript. JSON-LD FAQPage tự động chứa mọi câu hỏi hiển thị, và snippet không hiển thị gì khi danh sách trống.'
         />
       </Section>
 

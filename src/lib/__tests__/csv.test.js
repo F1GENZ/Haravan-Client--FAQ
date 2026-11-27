@@ -16,21 +16,18 @@ const COMPLEX_ROWS = [
     answer:
       '<p>Vào <strong>Tài khoản</strong>, chọn "Địa chỉ", rồi bấm <em>Chỉnh sửa</em>.</p>',
     categories: 'Giao hàng, thanh toán',
-    schema: true,
     position: 1,
   },
   {
     question: 'Có được kiểm hàng khi nhận?',
     answer: 'Có. Bạn nên quay video khi mở kiện hàng.\nĐiều này giúp xử lý khiếu nại nhanh hơn.',
     categories: 'Chính sách "đổi trả"',
-    schema: false,
     position: 2,
   },
   {
     question: 'Câu hỏi có dấu phẩy, ngoặc "kép" và xuống dòng\nở giữa?',
     answer: '',
     categories: 'Khác',
-    schema: false,
     position: 3,
   },
 ];
@@ -44,10 +41,10 @@ describe('serializeCsv', () => {
 
   it('quotes fields containing commas, quotes, and line breaks per RFC 4180', () => {
     const csv = serializeCsv([
-      { question: 'a,b', answer: 'say "hi"', categories: 'x', schema: false, position: 1 },
+      { question: 'a,b', answer: 'say "hi"', categories: 'x', position: 1 },
     ]);
     const dataLine = csv.trimEnd().split('\r\n')[1];
-    expect(dataLine).toBe('"a,b","say ""hi""",x,false,1');
+    expect(dataLine).toBe('"a,b","say ""hi""",x,1');
   });
 });
 
@@ -62,7 +59,6 @@ describe('csv round-trip', () => {
       expect(row.value.question).toBe(COMPLEX_ROWS[index].question.trim());
       expect(row.value.answer).toBe(COMPLEX_ROWS[index].answer);
       expect(row.value.categories).toBe(COMPLEX_ROWS[index].categories);
-      expect(row.value.schema).toBe(COMPLEX_ROWS[index].schema);
       expect(row.value.position).toBe(COMPLEX_ROWS[index].position);
     });
   });
@@ -84,7 +80,6 @@ describe('csv round-trip', () => {
       question: COMPLEX_ROWS[1].question,
       answer: COMPLEX_ROWS[1].answer,
       categories: COMPLEX_ROWS[1].categories,
-      schema: false,
       position: 7,
     });
   });
@@ -112,15 +107,11 @@ describe('parseCsv', () => {
 
 describe('header validation', () => {
   it('accepts the exact column order with surrounding spaces', () => {
-    expect(validateCsvHeader([' question ', 'answer', 'categories', 'schema', 'position'])).toBe(
-      true
-    );
+    expect(validateCsvHeader([' question ', 'answer', 'categories', 'position'])).toBe(true);
   });
 
   it('rejects a reordered or missing column', () => {
-    expect(validateCsvHeader(['answer', 'question', 'categories', 'schema', 'position'])).toBe(
-      false
-    );
+    expect(validateCsvHeader(['answer', 'question', 'categories', 'position'])).toBe(false);
     expect(validateCsvHeader(['question', 'answer'])).toBe(false);
   });
 
@@ -132,11 +123,11 @@ describe('header validation', () => {
 describe('parseFaqCsv row validation', () => {
   it('reports invalid rows and keeps the valid ones', () => {
     const csv =
-      '\uFEFFquestion,answer,categories,schema,position\r\n' +
-      'Câu hỏi hợp lệ,Trả lời,Khác,false,1\r\n' +
-      ',Thiếu câu hỏi,Khác,false,2\r\n' +
-      'Câu hỏi lỗi schema,Trả lời,Khác,yes,3\r\n' +
-      'Câu hỏi lỗi vị trí,Trả lời,Khác,true,abc\r\n' +
+      '\uFEFFquestion,answer,categories,position\r\n' +
+      'Câu hỏi hợp lệ,Trả lời,Khác,1\r\n' +
+      ',Thiếu câu hỏi,Khác,2\r\n' +
+      'Câu hỏi lỗi vị trí chữ,Trả lời,Khác,abc\r\n' +
+      'Câu hỏi lỗi vị trí âm,Trả lời,Khác,-3\r\n' +
       'Câu hỏi thiếu cột,Trả lời\r\n';
 
     const rows = parseFaqCsv(csv);
@@ -144,26 +135,26 @@ describe('parseFaqCsv row validation', () => {
     expect(rows).toHaveLength(5);
     expect(rows[0].value).toMatchObject({ question: 'Câu hỏi hợp lệ', position: 1 });
     expect(rows[1].error).toMatch(/Câu hỏi/);
-    expect(rows[2].error).toMatch(/schema/);
+    expect(rows[2].error).toMatch(/Vị trí/);
     expect(rows[3].error).toMatch(/Vị trí/);
     expect(rows[4].error).toMatch(/Số cột/);
   });
 
-  it('treats an empty position as null and accepts 1/0 for schema', () => {
+  it('treats an empty position as null', () => {
     const csv =
-      'question,answer,categories,schema,position\r\n' +
-      'Câu hỏi,Trả lời,Khác,1,\r\n' +
-      'Câu hỏi 2,Trả lời,Khác,0,5\r\n';
+      'question,answer,categories,position\r\n' +
+      'Câu hỏi,Trả lời,Khác,\r\n' +
+      'Câu hỏi 2,Trả lời,Khác,5\r\n';
     const rows = parseFaqCsv(csv);
-    expect(rows[0].value).toMatchObject({ schema: true, position: null });
-    expect(rows[1].value).toMatchObject({ schema: false, position: 5 });
+    expect(rows[0].value).toMatchObject({ position: null });
+    expect(rows[1].value).toMatchObject({ position: 5 });
   });
 
   it('accepts the position cap and rejects anything above it', () => {
     const csv =
-      'question,answer,categories,schema,position\r\n' +
-      'Câu hỏi,Trả lời,Khác,1,1000\r\n' +
-      'Câu hỏi 2,Trả lời,Khác,1,1001\r\n';
+      'question,answer,categories,position\r\n' +
+      'Câu hỏi,Trả lời,Khác,1000\r\n' +
+      'Câu hỏi 2,Trả lời,Khác,1001\r\n';
     const rows = parseFaqCsv(csv);
     expect(rows[0].value).toMatchObject({ position: 1000 });
     expect(rows[1].error).toMatch(/từ 1 đến 1000/);
@@ -191,12 +182,11 @@ describe('formula injection guard', () => {
         question: '=HYPERLINK(A1)',
         answer: '+1',
         categories: '-x',
-        schema: false,
         position: 1,
       },
     ]);
     const dataLine = csv.trimEnd().split('\r\n')[1];
-    expect(dataLine).toBe("'=HYPERLINK(A1),'+1,'-x,false,1");
+    expect(dataLine).toBe("'=HYPERLINK(A1),'+1,'-x,1");
   });
 
   it('round-trips formula text through export and import', () => {
@@ -205,14 +195,12 @@ describe('formula injection guard', () => {
         question: '=HYPERLINK(A1)',
         answer: '=SUM(A1:A2)',
         categories: '-danger',
-        schema: false,
         position: 4,
       },
       {
         question: '@cmd',
         answer: '+1',
         categories: 'Khác',
-        schema: true,
         position: 5,
       },
     ];

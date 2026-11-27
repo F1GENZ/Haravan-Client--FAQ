@@ -29,7 +29,7 @@ const FEATURES = [
   {
     icon: <StarOutlined style={{ color: '#faad14', fontSize: 18 }} />,
     title: 'Schema Markup cho dữ liệu có cấu trúc',
-    text: 'Câu hỏi bật Schema Markup được đưa vào JSON-LD FAQPage để công cụ tìm kiếm và trợ lý AI đọc cặp hỏi đáp dưới dạng dữ liệu có cấu trúc; ứng dụng không đảm bảo hiển thị đặc biệt nào trên kết quả tìm kiếm.',
+    text: 'Mọi câu hỏi hiển thị đều tự động đi vào JSON-LD FAQPage để công cụ tìm kiếm và trợ lý AI đọc cặp hỏi đáp dưới dạng dữ liệu có cấu trúc; ứng dụng không đảm bảo hiển thị đặc biệt nào trên kết quả tìm kiếm.',
   },
   {
     icon: <OrderedListOutlined style={{ color: '#722ed1', fontSize: 18 }} />,

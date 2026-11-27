@@ -32,7 +32,6 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import {
   deleteFaq,
-  updateFaq,
   useCreateFaq,
   useDeleteFaq,
   useFaqs,
@@ -58,7 +57,6 @@ import {
   hasActiveFilters,
   listErrorCopy,
   planBulkAction,
-  schemaUpdatePayload,
 } from '../../lib/faqList';
 import { faqEntryToCsvRow, serializeCsv } from '../../lib/csv';
 import {
@@ -286,8 +284,7 @@ const Metafields = () => {
 
     try {
       for (const entry of plan.runnable) {
-        // Re-read the row before writing: an edit or a reorder may have landed since the
-        // plan was built, and the PUT carries the whole FAQ, not just the schema flag.
+        // Re-read the row before writing: an edit or a reorder may have landed since the plan was built.
         const latest = latestEntriesRef.current.find(
           (item) => String(item.id) === String(entry.id)
         );
@@ -295,22 +292,11 @@ const Metafields = () => {
           skipped += 1;
         } else {
           try {
-            if (action === BULK_ACTIONS.delete) {
-              await deleteFaq({
-                type: resourceType,
-                objectid: objectid || '0',
-                metafieldid: latest.id,
-              });
-            } else {
-              await updateFaq(
-                schemaUpdatePayload(
-                  resourceType,
-                  objectid || '0',
-                  latest,
-                  action === BULK_ACTIONS.schemaOn
-                )
-              );
-            }
+            await deleteFaq({
+              type: resourceType,
+              objectid: objectid || '0',
+              metafieldid: latest.id,
+            });
             succeeded.push(String(latest.id));
           } catch (bulkError) {
             const result = toResultError(bulkError);
@@ -552,20 +538,6 @@ const Metafields = () => {
               <Button size='small' onClick={() => setSelectedIds([])} disabled={busy}>
                 Bỏ chọn
               </Button>
-              <Button
-                size='small'
-                onClick={() => runBulk(BULK_ACTIONS.schemaOn)}
-                disabled={!canWrite || busy}
-              >
-                Bật Schema
-              </Button>
-              <Button
-                size='small'
-                onClick={() => runBulk(BULK_ACTIONS.schemaOff)}
-                disabled={!canWrite || busy}
-              >
-                Tắt Schema
-              </Button>
               <Popconfirm
                 title={`Xóa ${selectedIds.length} câu hỏi?`}
                 description={`${selectedIds.length} câu hỏi đã chọn sẽ bị xóa khỏi Haravan. Thao tác này không hoàn tác được.`}
@@ -722,11 +694,6 @@ const Metafields = () => {
                           {item.pending ? (
                             <Tag color='gold' style={{ marginInlineEnd: 4 }}>
                               Đang chờ đồng bộ
-                            </Tag>
-                          ) : null}
-                          {value.schema ? (
-                            <Tag color='green' style={{ marginInlineEnd: 4 }}>
-                              Schema Markup
                             </Tag>
                           ) : null}
                           <Button

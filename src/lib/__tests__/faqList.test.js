@@ -14,7 +14,6 @@ import {
   listErrorCopy,
   normalizeSearchText,
   planBulkAction,
-  schemaUpdatePayload,
 } from '../faqList';
 import { toFaqEntry } from '../faq';
 
@@ -145,37 +144,14 @@ describe('planBulkAction', () => {
   });
 
   it('ignores ids that are not in the list', () => {
-    const plan = planBulkAction(BULK_ACTIONS.schemaOn, entries, ['999']);
+    const plan = planBulkAction(BULK_ACTIONS.delete, entries, ['999']);
     expect(plan.runnable).toEqual([]);
     expect(plan.skipped).toEqual([]);
   });
 
   it('accepts numeric selections', () => {
-    const plan = planBulkAction(BULK_ACTIONS.schemaOff, entries, [2]);
+    const plan = planBulkAction(BULK_ACTIONS.delete, entries, [2]);
     expect(plan.runnable.map((entry) => entry.id)).toEqual(['2']);
-  });
-});
-
-describe('schemaUpdatePayload', () => {
-  it('rebuilds the stored FAQ with the new schema flag', () => {
-    const entry = makeEntry(7, {
-      question: 'Hỏi',
-      answer: '<p>Đáp</p>',
-      categories: 'Giao hàng',
-      schema: false,
-      position: 7,
-    });
-    expect(schemaUpdatePayload('shop', '0', entry, true)).toEqual({
-      type: 'shop',
-      objectid: '0',
-      key: 'faq_7',
-      metafieldid: '7',
-      question: 'Hỏi',
-      answer: '<p>Đáp</p>',
-      categories: 'Giao hàng',
-      schema: true,
-      position: 7,
-    });
   });
 });
 
@@ -222,14 +198,14 @@ describe('describeBulkResult', () => {
 
   it('reports skipped, failed and stopped runs', () => {
     const result = describeBulkResult({
-      action: BULK_ACTIONS.schemaOn,
+      action: BULK_ACTIONS.delete,
       succeeded: 1,
       failures: [{ question: 'b', message: 'lỗi' }],
       skipped: 2,
       stopped: true,
     });
     expect(result.type).toBe('error');
-    expect(result.summary).toContain('Đã cập nhật Schema cho 1 câu hỏi');
+    expect(result.summary).toContain('Đã xóa 1 câu hỏi');
     expect(result.summary).toContain('bỏ qua 2 câu (đang chờ đồng bộ hoặc không còn trong danh sách)');
     expect(result.summary).toContain('1 câu lỗi');
     expect(result.summary).toContain('Đã dừng vì hết lượt dùng thử');

@@ -4,8 +4,6 @@ export const PREVIEW_MAX_LENGTH = 240;
 
 export const BULK_ACTIONS = {
   delete: "delete",
-  schemaOn: "schema-on",
-  schemaOff: "schema-off",
 };
 
 const COMBINING_MARKS = /[\u0300-\u036f]/g;
@@ -102,20 +100,6 @@ export function planBulkAction(action, entries, selectedIds) {
   return { action, runnable, skipped };
 }
 
-export function schemaUpdatePayload(type, objectid, entry, schema) {
-  const value = faqValue(entry);
-  return buildFaqPayload({
-    type,
-    objectid,
-    metafieldid: entry?.id,
-    key: entry?.key,
-    question: value.question,
-    answer: value.answer,
-    categories: value.categories,
-    schema,
-    position: entry?.position,
-  });
-}
 
 export const LIST_ERROR_TITLE = "Không tải được danh sách câu hỏi";
 export const LIST_ERROR_TITLE_STALE =
@@ -146,11 +130,7 @@ export function describeBulkResult({
 }) {
   const parts = [];
   if (succeeded > 0) {
-    parts.push(
-      action === BULK_ACTIONS.delete
-        ? `Đã xóa ${succeeded} câu hỏi`
-        : `Đã cập nhật Schema cho ${succeeded} câu hỏi`
-    );
+    parts.push(`Đã xóa ${succeeded} câu hỏi`);
   }
   if (skipped > 0) {
     parts.push(`bỏ qua ${skipped} câu (đang chờ đồng bộ hoặc không còn trong danh sách)`);

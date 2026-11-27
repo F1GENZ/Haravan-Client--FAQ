@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { AutoComplete, Button, Flex, Form, Input, Modal, Spin, Switch } from 'antd';
+import { AutoComplete, Button, Flex, Form, Input, Modal, Spin } from 'antd';
 import { useCreateFaq, useUpdateFaq } from '../../common/MetafieldsServices';
 import {
   buildFaqPayload,
@@ -15,9 +15,6 @@ import { useCompactViewport } from '../../lib/useCompactViewport';
 
 // TinyMCE is only needed once the answer field renders, so the dialog shell stays light.
 const TinyEditor = lazy(() => import('../../components/editor'));
-
-const SCHEMA_TOOLTIP =
-  'Đưa câu hỏi này vào JSON-LD FAQPage để công cụ tìm kiếm và trợ lý AI đọc dưới dạng dữ liệu có cấu trúc.';
 
 // Leaves room for the header, the fields above the answer and the footer button row.
 const DESKTOP_BODY_MAX_HEIGHT = 'calc(100dvh - 240px)';
@@ -124,7 +121,6 @@ const ModalMetafields = ({
         storedAnswerRef.current
       ),
       categories: values.categories,
-      schema: values.schema,
       position: isEditing ? editing.position : nextPosition,
     });
 
@@ -266,15 +262,6 @@ const ModalMetafields = ({
               </Flex>
             )}
           </Suspense>
-        </Form.Item>
-        <Form.Item
-          label='Bật Schema FAQ cho Google'
-          name='schema'
-          valuePropName='checked'
-          tooltip={SCHEMA_TOOLTIP}
-          style={{ marginBottom: 0 }}
-        >
-          <Switch />
         </Form.Item>
       </Form>
     </Modal>

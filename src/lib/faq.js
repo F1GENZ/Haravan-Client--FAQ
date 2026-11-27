@@ -23,11 +23,7 @@ export function normalizePosition(value) {
 }
 
 export function toFaqEntry(metafield) {
-  const parsed = parseFaqValue(metafield?.value);
-  const parsedValue = {
-    ...parsed,
-    schema: parsed.schema === true || parsed.schema === "true",
-  };
+  const parsedValue = parseFaqValue(metafield?.value);
   return {
     ...metafield,
     parsedValue,
@@ -97,7 +93,6 @@ export function buildFaqPayload({
   question,
   answer,
   categories,
-  schema,
   position,
 }) {
   const payload = {
@@ -107,7 +102,6 @@ export function buildFaqPayload({
     question: String(question ?? "").trim(),
     answer: String(answer ?? ""),
     categories: String(categories ?? "").trim(),
-    schema: Boolean(schema),
   };
   if (metafieldid) payload.metafieldid = metafieldid;
   // A legacy item without a position must not invent one on update: the worker keeps the stored value.
@@ -125,16 +119,14 @@ export function buildDuplicatePayload(entry, position, key = createFaqKey()) {
     question: `${String(value.question ?? "").trim()} (bản sao)`,
     answer: value.answer ?? "",
     categories: value.categories ?? "",
-    schema: Boolean(value.schema),
     position: normalizePosition(position) ?? 1,
   };
 }
 
-/** Fields the answer dialog edits; a new question defaults to Schema on, matching the API. */
+/** Fields the answer dialog edits. Schema markup is automatic and not a merchant control. */
 export function faqFormValues(entry) {
   const value = entry?.parsedValue ?? parseFaqValue(entry?.value);
   return {
-    schema: entry ? Boolean(value.schema) : true,
     categories: value.categories ?? "",
     question: value.question ?? "",
     answer: value.answer ?? "",
@@ -168,10 +160,6 @@ export function isFaqFormDirty(initial, values) {
   if (String(values?.question ?? "") !== String(initial?.question ?? "")) return true;
   if (String(values?.categories ?? "") !== String(initial?.categories ?? "")) return true;
   if (String(values?.answer ?? "") !== String(initial?.answer ?? "")) return true;
-  // An unregistered switch reports undefined; that is not an edit.
-  return (
-    values?.schema !== undefined &&
-    Boolean(values.schema) !== Boolean(initial?.schema)
-  );
+  return false;
 }
 

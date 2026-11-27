@@ -149,9 +149,8 @@ const CsvImportModal = ({ open, onClose, type, objectid, entries, canWrite }) =>
           description={
             <Paragraph className='mb-0!'>
               File UTF-8, dòng đầu là tiêu đề:{' '}
-              <Text code>question,answer,categories,schema,position</Text>. Cột{' '}
-              <Text code>schema</Text> nhận <Text code>true</Text> hoặc <Text code>false</Text>;
-              cột <Text code>position</Text> có thể để trống để hệ thống tự nối vào cuối danh sách.
+              <Text code>question,answer,categories,position</Text>. Cột{' '}
+              <Text code>position</Text> có thể để trống để hệ thống tự nối vào cuối danh sách.
             </Paragraph>
           }
         />

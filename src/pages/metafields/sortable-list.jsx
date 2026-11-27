@@ -47,7 +47,6 @@ function SortableRow({ entry, index }) {
           {entry.parsedValue?.categories || 'Không phân loại'}
         </div>
       </div>
-      {entry.parsedValue?.schema ? <Tag color='green'>Schema Markup</Tag> : null}
     </div>
   );
 }

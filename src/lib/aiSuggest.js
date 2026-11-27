@@ -89,7 +89,6 @@ export function suggestionToPayload({
     question: draft?.question,
     answer: plainTextToHtml(draft?.answer),
     categories: normalizeSuggestionCategory(draft?.category),
-    schema: true,
     position,
   });
 }

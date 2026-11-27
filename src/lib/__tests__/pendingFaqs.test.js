@@ -26,7 +26,6 @@ const payload = {
   question: 'Câu hỏi mới',
   answer: '<p>Trả lời</p>',
   categories: 'Giao hàng',
-  schema: true,
   position: 2,
 };
 
@@ -48,7 +47,6 @@ describe('buildCreatedFaqEntry', () => {
       question: 'Câu hỏi mới',
       answer: '<p>Trả lời</p>',
       categories: 'Giao hàng',
-      schema: true,
       position: 2,
     });
     expect(entry.position).toBe(2);

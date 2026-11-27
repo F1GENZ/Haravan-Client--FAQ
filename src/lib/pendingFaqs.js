@@ -17,7 +17,6 @@ export function buildCreatedFaqEntry(values, metafield) {
     question: values?.question ?? "",
     answer: values?.answer ?? "",
     categories: values?.categories ?? "",
-    schema: Boolean(values?.schema),
     position: values?.position,
   };
   return toFaqEntry({
