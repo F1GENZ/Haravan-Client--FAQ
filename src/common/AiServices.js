@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import httpClient from "../config/AxiosConfig";
-import { hasSession } from "../lib/session";
+import { hasCredentials } from "../lib/session";
 import { toResult } from "./apiResult";
 
 // One quota per shop session: the worker derives the shop from the token.
@@ -23,7 +23,7 @@ export function useAiQuota({ enabled = true } = {}) {
   return useQuery({
     queryKey: AI_QUOTA_QUERY_KEY,
     queryFn: fetchAiQuota,
-    enabled: enabled && hasSession(),
+    enabled: enabled && hasCredentials(),
     retry: false,
     refetchOnWindowFocus: false,
     staleTime: 30 * 1000,

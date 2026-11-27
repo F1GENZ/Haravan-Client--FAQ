@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import httpClient from "../config/AxiosConfig";
-import { hasSession } from "../lib/session";
+import { hasCredentials } from "../lib/session";
 import { sortFaqEntries, toFaqEntries } from "../lib/faq";
 import {
   addPendingFaq,
@@ -99,7 +99,7 @@ export function useFaqs({ type, objectid }) {
       const entries = sortFaqEntries(toFaqEntries(await fetchFaqs(owner)));
       return sortFaqEntries(mergePendingFaqs(pendingFaqs, owner, entries));
     },
-    enabled: hasTarget && hasSession(),
+    enabled: hasTarget && hasCredentials(),
     retry: false,
     refetchOnWindowFocus: false,
     staleTime: 30 * 1000,

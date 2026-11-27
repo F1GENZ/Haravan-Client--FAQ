@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import httpClient from "../config/AxiosConfig";
-import { hasSession } from "../lib/session";
+import { hasCredentials } from "../lib/session";
 import { toResult, toResultError } from "./apiResult";
 
 const SNIPPET_QUERY_KEY = ["theme-snippet"];
@@ -32,7 +32,7 @@ export function useSnippetStatus() {
       const response = await httpClient.get("/api/theme/snippet");
       return toResult(response).data;
     },
-    enabled: hasSession(),
+    enabled: hasCredentials(),
     retry: false,
     refetchOnWindowFocus: false,
   });
@@ -72,7 +72,7 @@ export function useThemeTemplates() {
       const response = await httpClient.get("/api/theme/templates");
       return toResult(response).data;
     },
-    enabled: hasSession(),
+    enabled: hasCredentials(),
     retry: false,
     refetchOnWindowFocus: false,
   });

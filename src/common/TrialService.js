@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import httpClient from "../config/AxiosConfig";
-import { hasSession } from "../lib/session";
+import { hasCredentials } from "../lib/session";
 import { toResult } from "./apiResult";
 
 export const DEFAULT_TRIAL = {
@@ -16,11 +16,11 @@ export function useTrialInfo() {
   return useQuery({
     queryKey: ["trial"],
     queryFn: async () => {
-      if (!hasSession()) return DEFAULT_TRIAL;
+      if (!hasCredentials()) return DEFAULT_TRIAL;
       const response = await httpClient.get("/api/oauth/install/trial");
       return toResult(response).data ?? DEFAULT_TRIAL;
     },
-    enabled: hasSession(),
+    enabled: hasCredentials(),
     staleTime: 60 * 1000,
     retry: false,
     refetchOnWindowFocus: false,

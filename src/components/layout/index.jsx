@@ -16,7 +16,7 @@ import {
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTrialInfo } from '../../common/TrialService';
-import { getOrgid, hasSession } from '../../lib/session';
+import { getOrgid, hasCredentials } from '../../lib/session';
 import { TRIAL_EXPIRED_MESSAGE } from '../../lib/messages';
 
 const { Sider, Content } = Layout;
@@ -103,7 +103,7 @@ const InfoRow = ({ icon, label, value, valueColor = '#fff' }) => (
 const MainLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const sessionReady = hasSession();
+  const sessionReady = hasCredentials();
   const { data: trial } = useTrialInfo();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() =>
