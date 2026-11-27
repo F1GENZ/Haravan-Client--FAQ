@@ -40,7 +40,7 @@ import {
 import { toResultError } from '../../common/apiResult';
 import { useCanWrite } from '../../common/TrialService';
 import { downloadTextFile } from '../../common/download';
-import { hasSession } from '../../lib/session';
+import { hasCredentials } from '../../lib/session';
 import { RESOURCE_TYPES, resourceTypeFromPath } from '../../lib/resources';
 import {
   buildDuplicatePayload,
@@ -345,7 +345,7 @@ const Metafields = () => {
     }
   };
 
-  const sessionReady = hasSession();
+  const sessionReady = hasCredentials();
   const header = (
     <PageHeader
       title={SCOPE_TITLES[resourceType]}

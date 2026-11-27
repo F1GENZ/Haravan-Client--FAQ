@@ -26,6 +26,18 @@ window.addEventListener('vite:preloadError', (event) => {
   window.location.reload();
 });
 
+// The Haravan admin iframe opens the app at /install/login?shop=...&orgid=..., and that page
+// redirects into the app, dropping the query. The App Bridge SDK needs the shop after landing,
+// so the parameters are captured here before any route logic runs — sessionStorage because an
+// embedded session is a per-tab context, exactly what the SDK reads back in haravanApp.js.
+{
+  const params = new URLSearchParams(window.location.search);
+  const shop = params.get('shop');
+  const orgid = params.get('orgid');
+  if (shop) window.sessionStorage.setItem('hrv_shop', shop);
+  if (orgid) window.sessionStorage.setItem('hrv_orgid', orgid);
+}
+
 createRoot(document.getElementById('root')).render(
   <QueryClientProvider client={queryClient}>
     <ConfigProvider theme={APP_ANTD_THEME}>

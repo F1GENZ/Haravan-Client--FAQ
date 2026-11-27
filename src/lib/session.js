@@ -53,7 +53,6 @@ export function getOrgid() {
 export function hasSession() {
   return Boolean(getSessionToken());
 }
-
 export function storeSession({ session, orgid }) {
   const storage = getStorage();
   if (!storage) return;
@@ -62,6 +61,21 @@ export function storeSession({ session, orgid }) {
     storage.setItem(ORGID_KEY, orgid);
   } else {
     storage.removeItem(ORGID_KEY);
+  }
+}
+
+/**
+ * Inside the Haravan admin iframe the credential is the App Bridge session token the SDK mints
+ * per request from the merchant's live admin session — there is no faq_session at all (the
+ * iframe's storage is partitioned), so a gate on hasSession() alone would lock embedded
+ * merchants out of their own installed app.
+ */
+export function hasCredentials() {
+  if (hasSession()) return true;
+  try {
+    return typeof window !== "undefined" && window.self !== window.top;
+  } catch {
+    return true;
   }
 }
 

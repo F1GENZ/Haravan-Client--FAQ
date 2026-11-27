@@ -47,7 +47,7 @@ import {
   templateStatusMeta,
   validateTemplateTitle,
 } from '../../lib/templateInsert';
-import { hasSession } from '../../lib/session';
+import { hasCredentials } from '../../lib/session';
 import { snippetStatusView, themeDisplayName } from '../../lib/storefrontStatus';
 import PageHeader from '../../components/page-header';
 import LoginRequired from '../../components/login-required';
@@ -324,7 +324,7 @@ const Storefront = () => {
     />
   );
 
-  if (!hasSession()) {
+  if (!hasCredentials()) {
     return (
       <>
         {header}
